@@ -1,0 +1,30 @@
+[package]
+name = "microservice"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+tokio = { version = "1.20.0", features = ["rt", "macros"] }
+sea-orm = { version = "0.12.12", features = [
+  "sqlx-postgres",
+  "runtime-tokio-native-tls",
+  "with-json",
+] }
+serde = { version = "1.0.130", features = ["derive"] }
+actix-web = "4"
+env_logger = "0.11.0"
+
+[target.'cfg(unix)'.dependencies]
+openssl = { version = "0.10.63", features = ["vendored"] }
+
+[build-dependencies]
+vcpkg = "0.2.15"
+
+[profile.release]
+strip = true
+opt-level = 's'
+lto = true
+debug = 0
+codegen-units = 1
+panic = 'abort'
