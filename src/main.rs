@@ -4,8 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::time::Duration;
 
-mod enities;
-
 #[derive(Debug, Clone)]
 struct State {
     db: DatabaseConnection,
