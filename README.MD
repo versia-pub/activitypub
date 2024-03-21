@@ -1,8 +1,24 @@
-## A simple rust project for microservices using rust, actix, and postgres
+## Lysand ActivityPub Layer
 
-This project contains a simple rust project for microservices using rust, actix, and postgres.
+A simple activitypub compatibility layer ("bridge"), to make Lysand compatible with the ActivityPub and ActivityStreams protocol.
+The layer is realised in a microservice format.
 
-The `Dockerfile` in this project is used to build a docker image for the rust project, the output Docker image is a from scratch image that contains the rust binary.
+## Development (Flakes)
+
+This repo uses [Flakes](https://nixos.wiki/wiki/Flakes) from the get-go.
+
+```bash
+# Dev shell
+nix develop
+
+# or run via cargo
+nix develop -c cargo run
+
+# build
+nix build
+```
+
+We also provide a [`justfile`](https://just.systems/) for Makefile'esque commands.
 
 ### Building and running the docker image
 
