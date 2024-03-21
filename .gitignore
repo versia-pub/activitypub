@@ -1,3 +1,6 @@
 /target
 .idea
 .vscode
+/result
+/result-lib
+.direnv

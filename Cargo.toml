@@ -1,8 +1,9 @@
 [package]
-name = "microservice"
+name = "lysand-ap-layer"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
+authors = ["April John <aprl@acab.dev>"]
 
 [dependencies]
 tokio = { version = "1.20.0", features = ["rt", "macros"] }
@@ -14,6 +15,7 @@ sea-orm = { version = "0.12.12", features = [
 serde = { version = "1.0.130", features = ["derive"] }
 actix-web = "4"
 env_logger = "0.11.0"
+clap = { version = "4.3.14", features = ["derive"] }
 
 [target.'cfg(unix)'.dependencies]
 openssl = { version = "0.10.63", features = ["vendored"] }
