@@ -1,5 +1,5 @@
 ## Lysand ActivityPub Layer
-
+[![Nix Flake actions](https://github.com/lysand-org/lysand-ap-layer/actions/workflows/nix-flake.yml/badge.svg)](https://github.com/lysand-org/lysand-ap-layer/actions/workflows/nix-flake.yml)
 A simple activitypub compatibility layer ("bridge"), to make Lysand compatible with the ActivityPub and ActivityStreams protocol.
 The layer is realised in a microservice format.
 
