@@ -32,7 +32,6 @@
           };
         in
         {
-          githubActions = inputs.nix-github-actions.lib.mkGithubMatrix { inherit checks; };
           # Rust package
           packages.default = pkgs.rustPlatform.buildRustPackage {
             inherit (cargoToml.package) name version;
