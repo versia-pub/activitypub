@@ -1,6 +1,6 @@
 use crate::{
-    error::Error,
     database::DatabaseHandle,
+    error::Error,
     objects::person::{DbUser, PersonAcceptedActivities},
 };
 use activitypub_federation::{

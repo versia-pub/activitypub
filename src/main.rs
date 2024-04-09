@@ -6,17 +6,20 @@ use database::Database;
 use http::{http_get_user, http_post_user_inbox, webfinger};
 use objects::person::DbUser;
 use serde::{Deserialize, Serialize};
-use tokio::signal;
 use std::{
-    collections::HashMap, env, net::ToSocketAddrs, sync::{Arc, Mutex}
+    collections::HashMap,
+    env,
+    net::ToSocketAddrs,
+    sync::{Arc, Mutex},
 };
+use tokio::signal;
 
-mod database;
-mod objects;
 mod activities;
-mod utils;
+mod database;
 mod error;
 mod http;
+mod objects;
+mod utils;
 
 #[derive(Debug, Clone)]
 struct State {
@@ -55,7 +58,15 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
 
     let server_url = env::var("LISTEN").unwrap_or("127.0.0.1:8080".to_string());
 
-    let local_user = DbUser::new(env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN.to_string()).as_str(), env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string()).as_str()).unwrap();
+    let local_user = DbUser::new(
+        env::var("FEDERATED_DOMAIN")
+            .unwrap_or(DOMAIN.to_string())
+            .as_str(),
+        env::var("LOCAL_USER_NAME")
+            .unwrap_or(LOCAL_USER_NAME.to_string())
+            .as_str(),
+    )
+    .unwrap();
 
     let database = Arc::new(Database {
         users: Mutex::new(vec![local_user]),
@@ -66,12 +77,22 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     let data = FederationConfig::builder()
         .domain(env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set"))
         .app_data(state.clone().database)
-        .build().await?;
-
+        .build()
+        .await?;
 
     let mut labels = HashMap::new();
-    labels.insert("domain".to_string(), env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set").to_string());
-    labels.insert("name".to_string(), env::var("LOCAL_USER_NAME").expect("LOCAL_USER_NAME must be set").to_string());
+    labels.insert(
+        "domain".to_string(),
+        env::var("FEDERATED_DOMAIN")
+            .expect("FEDERATED_DOMAIN must be set")
+            .to_string(),
+    );
+    labels.insert(
+        "name".to_string(),
+        env::var("LOCAL_USER_NAME")
+            .expect("LOCAL_USER_NAME must be set")
+            .to_string(),
+    );
 
     let prometheus = PrometheusMetricsBuilder::new("api")
         .endpoint("/metrics")
@@ -99,11 +120,11 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     tokio::spawn(http_server);
 
     match signal::ctrl_c().await {
-        Ok(()) => {},
+        Ok(()) => {}
         Err(err) => {
             eprintln!("Unable to listen for shutdown signal: {}", err);
             // we also shut down in case of error
-        },
+        }
     }
 
     Ok(())

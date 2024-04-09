@@ -1,9 +1,6 @@
 use crate::{
-    activities::create_post::CreatePost,
-    database::DatabaseHandle,
-    error::Error,
-    utils::generate_object_id,
-    objects::person::DbUser,
+    activities::create_post::CreatePost, database::DatabaseHandle, error::Error,
+    objects::person::DbUser, utils::generate_object_id,
 };
 use activitypub_federation::{
     config::Data,

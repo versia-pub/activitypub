@@ -1,4 +1,4 @@
-use crate::{objects::person::DbUser, error::Error};
+use crate::{error::Error, objects::person::DbUser};
 use anyhow::anyhow;
 use std::sync::{Arc, Mutex};
 

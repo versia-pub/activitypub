@@ -1,9 +1,9 @@
 use crate::{
     database::DatabaseHandle,
     error::Error,
+    objects::post::DbPost,
     objects::{person::DbUser, post::Note},
     utils::generate_object_id,
-    objects::post::DbPost,
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
