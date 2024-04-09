@@ -48,13 +48,13 @@ pub async fn http_get_user(
     user_name: web::Path<String>,
     data: Data<DatabaseHandle>,
 ) -> Result<HttpResponse, Error> {
-    let signed_by = signing_actor::<DbUser>(&request, None, &data).await?;
+    //let signed_by = signing_actor::<DbUser>(&request, None, &data).await?;
     // here, checks can be made on the actor or the domain to which
     // it belongs, to verify whether it is allowed to access this resource
-    info!(
-        "Fetch user request is signed by system account {}",
-        signed_by.id()
-    );
+    //info!(
+    //    "Fetch user request is signed by system account {}",
+    //    signed_by.id()
+    //);
 
     let db_user = data.local_user();
     if user_name.into_inner() == db_user.name {
