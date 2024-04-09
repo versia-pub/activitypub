@@ -33,6 +33,11 @@
             inherit (cargoToml.package) name version;
             src = ./.;
             cargoLock.lockFile = ./Cargo.lock;
+            buildInputs = nonRustDeps;
+            nativeBuildInputs = with pkgs; [
+              rust-toolchain
+              pkg-config
+            ];
           };
 
           # Rust dev environment

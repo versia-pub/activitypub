@@ -7,18 +7,22 @@ authors = ["April John <aprl@acab.dev>"]
 
 [dependencies]
 tokio = { version = "1.20.0", features = ["rt", "macros"] }
-sea-orm = { version = "0.12.12", features = [
-  "sqlx-postgres",
-  "runtime-tokio-native-tls",
-  "with-json",
-] }
 serde = { version = "1.0.130", features = ["derive"] }
 actix-web = "4"
 env_logger = "0.11.0"
 clap = { version = "4.3.14", features = ["derive"] }
-
-[target.'cfg(unix)'.dependencies]
-openssl = { version = "0.10.63", features = ["vendored"] }
+activitypub_federation = "0.5.2"
+anyhow = "1.0.81"
+url = "2.5.0"
+rand = "0.8.5"
+tracing = "0.1.40"
+async-trait = "0.1.79"
+enum_delegate = "0.2.0"
+chrono = "0.4.37"
+activitystreams-kinds = "0.3.0"
+thiserror = "1.0.58"
+num_cpus = "1.16.0"
+actix-web-prom = { version = "0.8.0", features = ["process"] }
 
 [build-dependencies]
 vcpkg = "0.2.15"

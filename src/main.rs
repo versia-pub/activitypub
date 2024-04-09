@@ -1,12 +1,26 @@
-use actix_web::{get, middleware, web, App, Error, HttpResponse, HttpServer};
-use sea_orm::{Database, DatabaseConnection};
+use activitypub_federation::config::{FederationConfig, FederationMiddleware};
+use actix_web::{get, http::KeepAlive, middleware, web, App, Error, HttpResponse, HttpServer};
+use actix_web_prom::PrometheusMetricsBuilder;
+use clap::Parser;
+use database::Database;
+use http::{http_get_user, http_post_user_inbox, webfinger};
+use objects::person::DbUser;
 use serde::{Deserialize, Serialize};
-use std::env;
-use std::time::Duration;
+use tokio::signal;
+use std::{
+    collections::HashMap, env, net::ToSocketAddrs, sync::{Arc, Mutex}
+};
+
+mod database;
+mod objects;
+mod activities;
+mod utils;
+mod error;
+mod http;
 
 #[derive(Debug, Clone)]
 struct State {
-    db: DatabaseConnection,
+    database: Arc<Database>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -14,41 +28,83 @@ struct Response {
     health: bool,
 }
 
+#[derive(Parser, Debug)]
+#[clap(author = "April John", version, about)]
+/// Application configuration
+struct Args {
+    /// whether to be verbose
+    #[arg(short = 'v')]
+    verbose: bool,
+
+    /// optional parse arg for config file
+    #[arg()]
+    config_file: Option<String>,
+}
+
 #[get("/")]
 async fn index(_: web::Data<State>) -> actix_web::Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().json(Response { health: true }))
 }
 
+const DOMAIN: &str = "example.com";
+const LOCAL_USER_NAME: &str = "example";
+
 #[actix_web::main]
-async fn main() -> actix_web::Result<()> {
+async fn main() -> actix_web::Result<(), anyhow::Error> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let server_url = env::var("LISTEN").unwrap_or("127.0.0.1:8080".to_string());
 
-    let mut opts =
-        sea_orm::ConnectOptions::new(env::var("DATABASE_URL").expect("DATABASE_URL ust be set"));
-    opts.max_connections(5)
-        .min_connections(1)
-        .connect_timeout(Duration::from_secs(8))
-        .acquire_timeout(Duration::from_secs(8))
-        .idle_timeout(Duration::from_secs(8))
-        .max_lifetime(Duration::from_secs(8));
+    let local_user = DbUser::new(env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN.to_string()).as_str(), env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string()).as_str()).unwrap();
 
-    let db: DatabaseConnection = Database::connect(opts)
-        .await
-        .expect("Failed to connect to database");
+    let database = Arc::new(Database {
+        users: Mutex::new(vec![local_user]),
+    });
 
-    let state = State { db };
+    let state = State { database };
 
-    let _ = HttpServer::new(move || {
+    let data = FederationConfig::builder()
+        .domain(env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set"))
+        .app_data(state.clone().database)
+        .build().await?;
+
+
+    let mut labels = HashMap::new();
+    labels.insert("domain".to_string(), env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set").to_string());
+    labels.insert("name".to_string(), env::var("LOCAL_USER_NAME").expect("LOCAL_USER_NAME must be set").to_string());
+
+    let prometheus = PrometheusMetricsBuilder::new("api")
+        .endpoint("/metrics")
+        .const_labels(labels)
+        .build()
+        .unwrap();
+
+    let http_server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(state.clone()))
             .wrap(middleware::Logger::default()) // enable logger
+            .wrap(prometheus.clone())
+            .wrap(FederationMiddleware::new(data.clone()))
+            .route("/{user}", web::get().to(http_get_user))
+            .route("/{user}/inbox", web::post().to(http_post_user_inbox))
+            .route("/.well-known/webfinger", web::get().to(webfinger))
             .service(index)
     })
     .bind(&server_url)?
-    .run()
-    .await?;
+    .workers(num_cpus::get())
+    .shutdown_timeout(20)
+    .keep_alive(KeepAlive::Os)
+    .run();
+
+    tokio::spawn(http_server);
+
+    match signal::ctrl_c().await {
+        Ok(()) => {},
+        Err(err) => {
+            eprintln!("Unable to listen for shutdown signal: {}", err);
+            // we also shut down in case of error
+        },
+    }
 
     Ok(())
 }
