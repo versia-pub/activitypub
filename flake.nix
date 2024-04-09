@@ -22,6 +22,9 @@
       imports = [
         inputs.treefmt-nix.flakeModule
       ];
+      flake = { config, self', inputs', ... }: {
+        githubActions = inputs.nix-github-actions.lib.mkGithubMatrix { checks = self'.packages; };
+      };
       perSystem = { config, self', pkgs, lib, system, ... }:
         let
           cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
