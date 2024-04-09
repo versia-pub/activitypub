@@ -3,28 +3,19 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
-    flake-parts.inputs.nixpkgs.follows = "nixpkgs";
-
     systems.url = "github:nix-systems/default";
-    systems.inputs.nixpkgs.follows = "nixpkgs";
-
-    nix-github-actions.url = "github:nix-community/nix-github-actions";
-    nix-github-actions.inputs.nixpkgs.follows = "nixpkgs";
 
     # Dev tools
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs:
+  outputs = inputs@{ flake-parts, ... }:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = import inputs.systems;
       imports = [
         inputs.treefmt-nix.flakeModule
       ];
-      flake = { config, self', inputs', ... }: {
-        githubActions = inputs.nix-github-actions.lib.mkGithubMatrix { checks = self'.packages; };
-      };
       perSystem = { config, self', pkgs, lib, system, ... }:
         let
           cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
@@ -36,8 +27,12 @@
             name = "rust-toolchain";
             paths = [ pkgs.rustc pkgs.cargo pkgs.cargo-watch pkgs.rust-analyzer pkgs.rustPlatform.rustcSrc ];
           };
+          checks = {
+            x86_64-linux.default = config.packages.default;
+          };
         in
         {
+          githubActions = inputs.nix-github-actions.lib.mkGithubMatrix { inherit checks; };
           # Rust package
           packages.default = pkgs.rustPlatform.buildRustPackage {
             inherit (cargoToml.package) name version;

@@ -9,26 +9,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  nix-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+  check:
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: "write"
+      contents: "read"
     steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v24
-      - id: set-matrix
-        name: Generate Nix Matrix
-        run: |
-          set -Eeu
-          matrix="$(nix eval --json '.#githubActions.matrix')"
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-
-  nix-build:
-    needs: nix-matrix
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix: ${{fromJSON(needs.nix-matrix.outputs.matrix)}}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v24
-      - run: nix build -L ".#${{ matrix.attr }}"
+      - uses: actions/checkout@v3
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: DeterminateSystems/flake-checker-action@main
+      - name: Run `nix build`
+        run: nix build .
