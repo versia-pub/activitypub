@@ -13,7 +13,7 @@ use activitystreams_kinds::link::MentionType;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DbPost {
     pub text: String,
     pub ap_id: ObjectId<DbPost>,

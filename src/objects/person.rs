@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use url::Url;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbUser {
     pub name: String,
     pub ap_id: ObjectId<DbUser>,

@@ -1,11 +1,12 @@
 use crate::{error::Error, objects::person::DbUser};
 use anyhow::anyhow;
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
 pub type DatabaseHandle = Arc<Database>;
 
 /// Our "database" which contains all known users (local and federated)
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Database {
     pub users: Mutex<Vec<DbUser>>,
 }

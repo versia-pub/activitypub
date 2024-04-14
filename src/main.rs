@@ -5,6 +5,8 @@ use clap::Parser;
 use database::Database;
 use http::{http_get_user, http_post_user_inbox, webfinger};
 use objects::person::DbUser;
+use redis::{AsyncCommands, Client, ErrorKind, RedisError, RedisResult};
+use redis_macros::{FromRedisValue, ToRedisArgs};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -13,6 +15,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::signal;
+use tracing::info;
 
 mod activities;
 mod database;
@@ -21,7 +24,8 @@ mod http;
 mod objects;
 mod utils;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRedisValue, ToRedisArgs)]
+#[redis_serializer(rmp_serde)]
 struct State {
     database: Arc<Database>,
 }
@@ -57,6 +61,18 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let server_url = env::var("LISTEN").unwrap_or("127.0.0.1:8080".to_string());
+    let redis_url = env::var("REDIS_URL").unwrap_or("redis://localhost:6379/".to_string());
+
+    let redis_client = redis::Client::open(redis_url)?;
+    let mut con = redis_client
+        .get_multiplexed_async_connection()
+        .await
+        .map_err(|_| {
+            RedisError::from((
+                ErrorKind::InvalidClientConfig,
+                "Cannot connect to redis. Try starting a redis-server process or container.",
+            ))
+        })?;
 
     let local_user = DbUser::new(
         env::var("FEDERATED_DOMAIN")
@@ -68,11 +84,13 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     )
     .unwrap();
 
-    let database = Arc::new(Database {
+    let new_database = Arc::new(Database {
         users: Mutex::new(vec![local_user]),
     });
 
-    let state = State { database };
+    let state: State = con.get("ap-layer-db").await.unwrap_or(State {
+        database: new_database,
+    });
 
     let data = FederationConfig::builder()
         .domain(env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set"))
@@ -126,6 +144,9 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             // we also shut down in case of error
         }
     }
+
+    info!("memory-saving 'db' in redis..");
+    con.set("ap-layer-db", &state);
 
     Ok(())
 }

@@ -10,7 +10,7 @@ description = "A compatibility layer between lysands official server and activit
 
 [dependencies]
 tokio = { version = "1.20.0", features = ["rt", "macros"] }
-serde = { version = "1.0.130", features = ["derive"] }
+serde = { version = "1.0.130", features = ["derive", "rc"] }
 actix-web = "4"
 env_logger = "0.11.0"
 clap = { version = "4.3.14", features = ["derive"] }
@@ -26,6 +26,9 @@ activitystreams-kinds = "0.3.0"
 thiserror = "1.0.58"
 num_cpus = "1.16.0"
 actix-web-prom = { version = "0.8.0", features = ["process"] }
+redis = { version = "0.25.3", features = ["tokio-comp", "tokio-rustls-comp", "cluster"] }
+redis-macros = "0.3.0"
+rmp-serde = "1.1.2"
 
 [build-dependencies]
 vcpkg = "0.2.15"
