@@ -25,7 +25,6 @@ mod objects;
 mod utils;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRedisValue, ToRedisArgs)]
-#[redis_serializer(rmp_serde)]
 struct State {
     database: Arc<Database>,
 }
@@ -146,7 +145,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     }
 
     info!("memory-saving 'db' in redis..");
-    con.set("ap-layer-db", &state);
+    con.set("ap-layer-db", &state).await?;
 
     Ok(())
 }
