@@ -1499,6 +1499,7 @@ dependencies = [
  "redis-macros",
  "rmp-serde",
  "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "tracing",
