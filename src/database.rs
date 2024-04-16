@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 pub type DatabaseHandle = Arc<Database>;
 
 /// Our "database" which contains all known users (local and federated)
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Database {
     pub users: Mutex<Vec<DbUser>>,
 }

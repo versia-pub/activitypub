@@ -24,7 +24,7 @@ mod http;
 mod objects;
 mod utils;
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRedisValue, ToRedisArgs)]
+#[derive(Debug, Clone)]
 struct State {
     database: Arc<Database>,
 }
@@ -87,9 +87,9 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         users: Mutex::new(vec![local_user]),
     });
 
-    let state: State = con.get("ap-layer-db").await.unwrap_or(State {
+    let state: State = State {
         database: new_database,
-    });
+    };
 
     let data = FederationConfig::builder()
         .domain(env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set"))
@@ -144,8 +144,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         }
     }
 
-    info!("memory-saving 'db' in redis..");
-    con.set("ap-layer-db", &state).await?;
+    info!("Main thread shutdown..");
 
     Ok(())
 }
