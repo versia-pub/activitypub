@@ -74,6 +74,7 @@
               just
               rust-toolchain
               pkg-config
+              sea-orm-cli
             ];
             RUST_BACKTRACE = 1;
           };
