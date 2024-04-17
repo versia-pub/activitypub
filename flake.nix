@@ -5,6 +5,8 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     systems.url = "github:nix-systems/default";
 
+    naersk.url = "github:nix-community/naersk";
+
     # Dev tools
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
@@ -23,6 +25,7 @@
             libiconv
             openssl
           ];
+          naersk' = pkgs.callPackage naersk {};
           rust-toolchain = pkgs.symlinkJoin {
             name = "rust-toolchain";
             paths = [ pkgs.rustc pkgs.cargo pkgs.cargo-watch pkgs.rust-analyzer pkgs.rustPlatform.rustcSrc ];
@@ -33,10 +36,9 @@
         in
         {
           # Rust package
-          packages.default = pkgs.rustPlatform.buildRustPackage {
+          packages.default = naersk'.buildPackage {
             inherit (cargoToml.package) name version;
             src = ./.;
-            cargoLock.lockFile = ./Cargo.lock;
             buildInputs = nonRustDeps;
             nativeBuildInputs = with pkgs; [
               rust-toolchain
