@@ -21,6 +21,7 @@
       perSystem = { config, self', pkgs, lib, system, ... }:
         let
           cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+          cargoMigToml = builtins.fromTOML (builtins.readFile ./migration/Cargo.toml);
           nonRustDeps = with pkgs; [
             libiconv
             openssl
@@ -39,6 +40,15 @@
           packages.default = naersk'.buildPackage {
             inherit (cargoToml.package) name version;
             src = ./.;
+            buildInputs = nonRustDeps;
+            nativeBuildInputs = with pkgs; [
+              rust-toolchain
+              pkg-config
+            ];
+          };
+          packages.migration = naersk'.buildPackage {
+            inherit (cargoMigToml.package) name version;
+            src = ./migration;
             buildInputs = nonRustDeps;
             nativeBuildInputs = with pkgs; [
               rust-toolchain
