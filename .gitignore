@@ -5,3 +5,4 @@
 /result-lib
 .direnv
 migration/target
+db.sqlite
