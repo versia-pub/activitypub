@@ -19,5 +19,10 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: DeterminateSystems/flake-checker-action@main
-      - name: Run `nix build`
+      - name: Build default package
         run: nix build .
+      - name: Check flakes
+        run: nix flake check
+      - name: Build migrations
+        run: nix build .#migration
+        
