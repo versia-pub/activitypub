@@ -26,7 +26,7 @@
             libiconv
             openssl
           ];
-          naersk' = pkgs.callPackage inputs.naersk {};
+          naersk' = pkgs.callPackage inputs.naersk { };
           rust-toolchain = pkgs.symlinkJoin {
             name = "rust-toolchain";
             paths = [ pkgs.rustc pkgs.cargo pkgs.cargo-watch pkgs.rust-analyzer pkgs.rustPlatform.rustcSrc ];

@@ -25,13 +25,12 @@ mod objects;
 mod utils;
 
 #[derive(Debug, Clone)]
-struct Config {
-}
+struct Config {}
 
 #[derive(Debug, Clone)]
 struct State {
     database: Arc<Database>,
-    config: Arc<Config>
+    config: Arc<Config>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -92,13 +91,11 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         users: Mutex::new(vec![local_user]),
     });
 
-    let config = Config {
-
-    };
+    let config = Config {};
 
     let state: State = State {
         database: new_database,
-        config: Arc::new(config)
+        config: Arc::new(config),
     };
 
     let data = FederationConfig::builder()
