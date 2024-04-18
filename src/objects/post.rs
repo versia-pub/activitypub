@@ -16,6 +16,7 @@ use activitypub_federation::{
 use activitystreams_kinds::link::MentionType;
 use sea_orm::{ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
+use tracing::info;
 use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -88,7 +89,15 @@ impl Object for post::Model {
         };
         let post = post
             .insert(data.app_data().database_connection.clone().as_ref())
-            .await?;
+            .await;
+
+        if let Err(err) = post {
+            eprintln!("Error inserting post: {:?}", err);
+            return Err(err.into());
+        }
+        info!("Post inserted: {:?}", post.as_ref().unwrap());
+
+        let post = post.unwrap();
 
         let mention = Mention {
             href: Url::parse(&creator.id)?,

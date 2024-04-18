@@ -74,6 +74,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     let user = entities::user::ActiveModel {
         id: Set(ap_id.into()),
         username: Set(username),
+        name: Set("Test account <3".to_string()),
         inbox: Set(inbox.to_string()),
         public_key: Set(keypair.public_key.clone()),
         private_key: Set(Some(keypair.private_key.clone())),

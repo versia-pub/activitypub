@@ -15,6 +15,7 @@ use activitypub_federation::{
 use chrono::{prelude, DateTime, Utc};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
+use tracing::info;
 use std::fmt::Debug;
 use url::Url;
 
@@ -64,6 +65,9 @@ pub struct Person {
     #[serde(rename = "type")]
     kind: PersonType,
     preferred_username: String,
+    name: String,
+    summary: Option<String>,
+    url: Url,
     id: ObjectId<user::Model>,
     inbox: Url,
     public_key: PublicKey,
@@ -97,6 +101,9 @@ impl Object for user::Model {
             id: Url::parse(&self.id).unwrap().into(),
             inbox: Url::parse(&self.inbox).unwrap(),
             public_key: self.public_key(),
+            name: self.name.clone(),
+            summary: self.summary.clone(),
+            url: Url::parse(&self.url).unwrap(),
         })
     }
 
@@ -116,13 +123,22 @@ impl Object for user::Model {
         let model = user::ActiveModel {
             id: Set(json.id.to_string()),
             username: Set(json.preferred_username),
+            name: Set(json.name),
             inbox: Set(json.inbox.to_string()),
             public_key: Set(json.public_key.public_key_pem),
             local: Set(false),
+            summary: Set(json.summary),
+            url: Set(json.url.to_string()),
             ..Default::default()
         };
-        let model = model.insert(_data.database_connection.as_ref()).await?;
-        Ok(model)
+        let model = model.insert(_data.database_connection.as_ref()).await;
+        if let Err(err) = model {
+            eprintln!("Error inserting user: {:?}", err);
+            Err(err.into())
+        } else {
+            info!("User inserted: {:?}", model.as_ref().unwrap());
+            Ok(model.unwrap())
+        }
     }
 }
 
