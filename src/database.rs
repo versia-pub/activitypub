@@ -11,7 +11,6 @@ pub struct Config {}
 #[derive(Debug, Clone)]
 pub struct State {
     pub database_connection: Arc<DatabaseConnection>,
-    pub config: Arc<Config>,
 }
 
 pub type StateHandle = Arc<State>;

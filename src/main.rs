@@ -100,7 +100,6 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
 
     let state: State = State {
         database_connection: db.into(),
-        config: Arc::new(config),
     };
 
     let data = FederationConfig::builder()
