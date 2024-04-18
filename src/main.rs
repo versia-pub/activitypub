@@ -105,6 +105,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     let data = FederationConfig::builder()
         .domain(env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set"))
         .app_data(state.clone())
+        .http_signature_compat(true)
         .build()
         .await?;
 
