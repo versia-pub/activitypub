@@ -72,13 +72,14 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     let keypair = generate_actor_keypair()?;
 
     let user = entities::user::ActiveModel {
-        id: Set(ap_id.into()),
+        id: Set(ap_id.clone().into()),
         username: Set(username),
         name: Set("Test account <3".to_string()),
         inbox: Set(inbox.to_string()),
         public_key: Set(keypair.public_key.clone()),
         private_key: Set(Some(keypair.private_key.clone())),
         last_refreshed_at: Set(chrono::offset::Utc::now()),
+        url: Set(ap_id.to_string()),
         local: Set(true),
         ..Default::default()
     };
