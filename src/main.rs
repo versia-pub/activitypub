@@ -96,8 +96,6 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
 
     let user = user.insert(&db).await;
 
-    let config = Config {};
-
     let state: State = State {
         database_connection: db.into(),
     };

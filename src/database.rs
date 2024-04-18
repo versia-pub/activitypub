@@ -13,7 +13,7 @@ pub struct State {
     pub database_connection: Arc<DatabaseConnection>,
 }
 
-pub type StateHandle = Arc<State>;
+pub type StateHandle = State;
 
 /// Our "database" which contains all known users (local and federated)
 #[derive(Debug)]
