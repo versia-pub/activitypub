@@ -1,4 +1,9 @@
-use crate::{activities::create_post::CreatePost, database::{State, StateHandle}, entities::{self, user}, error::Error};
+use crate::{
+    activities::create_post::CreatePost,
+    database::{State, StateHandle},
+    entities::{self, user},
+    error::Error,
+};
 use activitypub_federation::{
     config::Data,
     fetch::object_id::ObjectId,

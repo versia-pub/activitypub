@@ -1,5 +1,12 @@
 use crate::{
-    database::StateHandle, entities::{post, user}, error::Error, objects::{person::DbUser, post::{DbPost, Note}}, utils::generate_object_id
+    database::StateHandle,
+    entities::{post, user},
+    error::Error,
+    objects::{
+        person::DbUser,
+        post::{DbPost, Note},
+    },
+    utils::generate_object_id,
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
@@ -35,9 +42,13 @@ impl CreatePost {
             id: generate_object_id(data.domain())?,
         };
         let create_with_context = WithContext::new_default(create);
-        let sends =
-            SendActivityTask::prepare(&create_with_context, &data.local_user().await?, vec![inbox], data)
-                .await?;
+        let sends = SendActivityTask::prepare(
+            &create_with_context,
+            &data.local_user().await?,
+            vec![inbox],
+            data,
+        )
+        .await?;
         for send in sends {
             send.sign_and_send(data).await?;
         }

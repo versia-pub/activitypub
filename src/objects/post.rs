@@ -1,5 +1,10 @@
 use crate::{
-    activities::create_post::CreatePost, database::StateHandle, entities::{post, user}, error::Error, objects::person::DbUser, utils::generate_object_id
+    activities::create_post::CreatePost,
+    database::StateHandle,
+    entities::{post, user},
+    error::Error,
+    objects::person::DbUser,
+    utils::generate_object_id,
 };
 use activitypub_federation::{
     config::Data,
@@ -81,8 +86,9 @@ impl Object for post::Model {
             local: Set(false),
             ..Default::default()
         };
-        let post = post.insert(data.app_data().database_connection.clone().as_ref())
-        .await?;
+        let post = post
+            .insert(data.app_data().database_connection.clone().as_ref())
+            .await?;
 
         let mention = Mention {
             href: Url::parse(&creator.id)?,

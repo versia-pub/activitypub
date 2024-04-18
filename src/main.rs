@@ -1,11 +1,15 @@
-use activitypub_federation::config::{FederationConfig, FederationMiddleware};
+use activitypub_federation::{
+    config::{FederationConfig, FederationMiddleware},
+    http_signatures::generate_actor_keypair,
+};
 use actix_web::{get, http::KeepAlive, middleware, web, App, Error, HttpResponse, HttpServer};
 use actix_web_prom::PrometheusMetricsBuilder;
+use chrono::{DateTime, Utc};
 use clap::Parser;
 use database::Database;
 use http::{http_get_user, http_post_user_inbox, webfinger};
 use objects::person::DbUser;
-use sea_orm::DatabaseConnection;
+use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -15,12 +19,13 @@ use std::{
 };
 use tokio::signal;
 use tracing::info;
+use url::Url;
 
 use crate::database::{Config, State};
 
-mod entities;
 mod activities;
 mod database;
+mod entities;
 mod error;
 mod http;
 mod objects;
@@ -69,11 +74,27 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     )
     .unwrap();
 
-    let new_database = Arc::new(Database {
-        users: Mutex::new(vec![local_user]),
-    });
+    let username = env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string());
+    let domain = env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN.to_string());
+
+    let ap_id = Url::parse(&format!("https://{}/{}", domain, &username))?;
+    let inbox = Url::parse(&format!("https://{}/{}/inbox", domain, &username))?;
+    let keypair = generate_actor_keypair()?;
+
+    let user = entities::user::ActiveModel {
+        id: Set(ap_id.into()),
+        username: Set(username),
+        inbox: Set(inbox.to_string()),
+        public_key: Set(keypair.public_key.clone()),
+        private_key: Set(Some(keypair.private_key.clone())),
+        last_refreshed_at: Set(chrono::offset::Utc::now()),
+        local: Set(true),
+        ..Default::default()
+    };
 
     let db = sea_orm::Database::connect(database_url).await?;
+
+    let user = user.insert(&db).await;
 
     let config = Config {};
 

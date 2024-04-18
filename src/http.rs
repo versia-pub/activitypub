@@ -1,5 +1,8 @@
 use crate::{
-    database::StateHandle, entities::user, error::Error, objects::person::{DbUser, PersonAcceptedActivities}
+    database::StateHandle,
+    entities::user,
+    error::Error,
+    objects::person::{DbUser, PersonAcceptedActivities},
 };
 use activitypub_federation::{
     actix_web::{inbox::receive_activity, signing_actor},
