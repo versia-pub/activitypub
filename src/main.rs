@@ -79,6 +79,8 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         public_key: Set(keypair.public_key.clone()),
         private_key: Set(Some(keypair.private_key.clone())),
         last_refreshed_at: Set(chrono::offset::Utc::now()),
+        follower_count: Set(0),
+        following_count: Set(0),
         url: Set(ap_id.to_string()),
         local: Set(true),
         ..Default::default()
