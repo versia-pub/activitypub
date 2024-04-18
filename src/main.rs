@@ -64,16 +64,6 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     let server_url = env::var("LISTEN").unwrap_or("127.0.0.1:8080".to_string());
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    let local_user = DbUser::new(
-        env::var("FEDERATED_DOMAIN")
-            .unwrap_or(DOMAIN.to_string())
-            .as_str(),
-        env::var("LOCAL_USER_NAME")
-            .unwrap_or(LOCAL_USER_NAME.to_string())
-            .as_str(),
-    )
-    .unwrap();
-
     let username = env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string());
     let domain = env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN.to_string());
 
@@ -95,6 +85,12 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     let db = sea_orm::Database::connect(database_url).await?;
 
     let user = user.insert(&db).await;
+
+    if let Err(err) = user {
+        eprintln!("Error inserting user: {:?}", err);
+    } else {
+        info!("User inserted: {:?}", user.unwrap());
+    }
 
     let state: State = State {
         database_connection: db.into(),
