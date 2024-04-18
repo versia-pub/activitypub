@@ -131,6 +131,8 @@ impl Object for user::Model {
             url: Set(json.url.to_string()),
             follower_count: Set(0),
             following_count: Set(0),
+            created_at: Set(Utc::now()),
+            last_refreshed_at: Set(Utc::now()),
             ..Default::default()
         };
         let model = model.insert(_data.database_connection.as_ref()).await;
