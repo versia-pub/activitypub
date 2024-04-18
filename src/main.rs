@@ -15,6 +15,7 @@ use std::{
 use tokio::signal;
 use tracing::info;
 
+mod entities;
 mod activities;
 mod database;
 mod error;
