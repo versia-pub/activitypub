@@ -1,7 +1,5 @@
 use crate::{
-    database::DatabaseHandle,
-    error::Error,
-    objects::person::{DbUser, PersonAcceptedActivities},
+    database::StateHandle, entities::user, error::Error, objects::person::{DbUser, PersonAcceptedActivities}
 };
 use activitypub_federation::{
     actix_web::{inbox::receive_activity, signing_actor},
@@ -15,8 +13,9 @@ use actix_web::{web, web::Bytes, App, HttpRequest, HttpResponse, HttpServer};
 use anyhow::anyhow;
 use serde::Deserialize;
 use tracing::info;
+use url::Url;
 
-pub fn listen(config: &FederationConfig<DatabaseHandle>) -> Result<(), Error> {
+pub fn listen(config: &FederationConfig<StateHandle>) -> Result<(), Error> {
     let hostname = config.domain();
     info!("Listening with actix-web on {hostname}");
     let config = config.clone();
@@ -46,7 +45,7 @@ pub fn listen(config: &FederationConfig<DatabaseHandle>) -> Result<(), Error> {
 pub async fn http_get_user(
     request: HttpRequest,
     user_name: web::Path<String>,
-    data: Data<DatabaseHandle>,
+    data: Data<StateHandle>,
 ) -> Result<HttpResponse, Error> {
     //let signed_by = signing_actor::<DbUser>(&request, None, &data).await?;
     // here, checks can be made on the actor or the domain to which
@@ -56,8 +55,8 @@ pub async fn http_get_user(
     //    signed_by.id()
     //);
 
-    let db_user = data.local_user();
-    if user_name.into_inner() == db_user.name {
+    let db_user = data.local_user().await?;
+    if user_name.into_inner() == db_user.username {
         let json_user = db_user.into_json(&data).await?;
         Ok(HttpResponse::Ok()
             .content_type(FEDERATION_CONTENT_TYPE)
@@ -71,9 +70,9 @@ pub async fn http_get_user(
 pub async fn http_post_user_inbox(
     request: HttpRequest,
     body: Bytes,
-    data: Data<DatabaseHandle>,
+    data: Data<StateHandle>,
 ) -> Result<HttpResponse, Error> {
-    receive_activity::<WithContext<PersonAcceptedActivities>, DbUser, DatabaseHandle>(
+    receive_activity::<WithContext<PersonAcceptedActivities>, user::Model, StateHandle>(
         request, body, &data,
     )
     .await
@@ -86,12 +85,12 @@ pub struct WebfingerQuery {
 
 pub async fn webfinger(
     query: web::Query<WebfingerQuery>,
-    data: Data<DatabaseHandle>,
+    data: Data<StateHandle>,
 ) -> Result<HttpResponse, Error> {
     let name = extract_webfinger_name(&query.resource, &data)?;
-    let db_user = data.read_user(name)?;
+    let db_user = data.read_user(name).await?;
     Ok(HttpResponse::Ok().json(build_webfinger_response(
         query.resource.clone(),
-        db_user.ap_id.into_inner(),
+        Url::parse(&db_user.id)?,
     )))
 }

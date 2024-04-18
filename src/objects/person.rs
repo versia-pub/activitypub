@@ -1,4 +1,4 @@
-use crate::{activities::create_post::CreatePost, database::DatabaseHandle, error::Error};
+use crate::{activities::create_post::CreatePost, database::{State, StateHandle}, entities::{self, user}, error::Error};
 use activitypub_federation::{
     config::Data,
     fetch::object_id::ObjectId,
@@ -7,7 +7,8 @@ use activitypub_federation::{
     protocol::{public_key::PublicKey, verification::verify_domains_match},
     traits::{ActivityHandler, Actor, Object},
 };
-use chrono::{DateTime, Utc};
+use chrono::{prelude, DateTime, Utc};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use url::Url;
@@ -15,7 +16,7 @@ use url::Url;
 #[derive(Debug, Clone)]
 pub struct DbUser {
     pub name: String,
-    pub ap_id: ObjectId<DbUser>,
+    pub ap_id: ObjectId<user::Model>,
     pub inbox: Url,
     // exists for all users (necessary to verify http signatures)
     pub public_key: String,
@@ -58,14 +59,14 @@ pub struct Person {
     #[serde(rename = "type")]
     kind: PersonType,
     preferred_username: String,
-    id: ObjectId<DbUser>,
+    id: ObjectId<user::Model>,
     inbox: Url,
     public_key: PublicKey,
 }
 
 #[async_trait::async_trait]
-impl Object for DbUser {
-    type DataType = DatabaseHandle;
+impl Object for user::Model {
+    type DataType = StateHandle;
     type Kind = Person;
     type Error = Error;
 
@@ -77,20 +78,19 @@ impl Object for DbUser {
         object_id: Url,
         data: &Data<Self::DataType>,
     ) -> Result<Option<Self>, Self::Error> {
-        let users = data.users.lock().unwrap();
-        let res = users
-            .clone()
-            .into_iter()
-            .find(|u| u.ap_id.inner() == &object_id);
+        let res = entities::prelude::User::find()
+            .filter(entities::user::Column::Id.eq(object_id.as_str()))
+            .one(data.database_connection.as_ref())
+            .await?;
         Ok(res)
     }
 
     async fn into_json(self, _data: &Data<Self::DataType>) -> Result<Self::Kind, Self::Error> {
         Ok(Person {
-            preferred_username: self.name.clone(),
+            preferred_username: self.username.clone(),
             kind: Default::default(),
-            id: self.ap_id.clone(),
-            inbox: self.inbox.clone(),
+            id: Url::parse(&self.id).unwrap().into(),
+            inbox: Url::parse(&self.inbox).unwrap(),
             public_key: self.public_key(),
         })
     }
@@ -108,22 +108,22 @@ impl Object for DbUser {
         json: Self::Kind,
         _data: &Data<Self::DataType>,
     ) -> Result<Self, Self::Error> {
-        Ok(DbUser {
-            name: json.preferred_username,
-            ap_id: json.id,
-            inbox: json.inbox,
-            public_key: json.public_key.public_key_pem,
-            private_key: None,
-            last_refreshed_at: Utc::now(),
-            followers: vec![],
-            local: false,
-        })
+        let model = user::ActiveModel {
+            id: Set(json.id.to_string()),
+            username: Set(json.preferred_username),
+            inbox: Set(json.inbox.to_string()),
+            public_key: Set(json.public_key.public_key_pem),
+            local: Set(false),
+            ..Default::default()
+        };
+        let model = model.insert(_data.database_connection.as_ref()).await?;
+        Ok(model)
     }
 }
 
-impl Actor for DbUser {
+impl Actor for user::Model {
     fn id(&self) -> Url {
-        self.ap_id.inner().clone()
+        Url::parse(&self.id).unwrap()
     }
 
     fn public_key_pem(&self) -> &str {
@@ -135,6 +135,6 @@ impl Actor for DbUser {
     }
 
     fn inbox(&self) -> Url {
-        self.inbox.clone()
+        Url::parse(&self.inbox).unwrap()
     }
 }

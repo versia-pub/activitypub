@@ -1,6 +1,5 @@
 use crate::{
-    activities::create_post::CreatePost, database::DatabaseHandle, error::Error,
-    objects::person::DbUser, utils::generate_object_id,
+    activities::create_post::CreatePost, database::StateHandle, entities::{post, user}, error::Error, objects::person::DbUser, utils::generate_object_id
 };
 use activitypub_federation::{
     config::Data,
@@ -10,14 +9,15 @@ use activitypub_federation::{
     traits::{Actor, Object},
 };
 use activitystreams_kinds::link::MentionType;
+use sea_orm::{ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DbPost {
     pub text: String,
-    pub ap_id: ObjectId<DbPost>,
-    pub creator: ObjectId<DbUser>,
+    pub ap_id: ObjectId<post::Model>,
+    pub creator: ObjectId<user::Model>,
     pub local: bool,
 }
 
@@ -26,12 +26,12 @@ pub struct DbPost {
 pub struct Note {
     #[serde(rename = "type")]
     kind: NoteType,
-    id: ObjectId<DbPost>,
-    pub(crate) attributed_to: ObjectId<DbUser>,
+    id: ObjectId<post::Model>,
+    pub(crate) attributed_to: ObjectId<user::Model>,
     #[serde(deserialize_with = "deserialize_one_or_many")]
     pub(crate) to: Vec<Url>,
     content: String,
-    in_reply_to: Option<ObjectId<DbPost>>,
+    in_reply_to: Option<ObjectId<post::Model>>,
     tag: Vec<Mention>,
 }
 
@@ -43,8 +43,8 @@ pub struct Mention {
 }
 
 #[async_trait::async_trait]
-impl Object for DbPost {
-    type DataType = DatabaseHandle;
+impl Object for post::Model {
+    type DataType = StateHandle;
     type Kind = Note;
     type Error = Error;
 
@@ -74,21 +74,24 @@ impl Object for DbPost {
             &json.content, &json.id
         );
         let creator = json.attributed_to.dereference(data).await?;
-        let post = DbPost {
-            text: json.content,
-            ap_id: json.id.clone(),
-            creator: json.attributed_to.clone(),
-            local: false,
+        let post: post::ActiveModel = post::ActiveModel {
+            content: Set(json.content.clone()),
+            id: Set(json.id.to_string()),
+            creator: Set(creator.id.to_string()),
+            local: Set(false),
+            ..Default::default()
         };
+        let post = post.insert(data.app_data().database_connection.clone().as_ref())
+        .await?;
 
         let mention = Mention {
-            href: creator.ap_id.clone().into_inner(),
+            href: Url::parse(&creator.id)?,
             kind: Default::default(),
         };
         let note = Note {
             kind: Default::default(),
             id: generate_object_id(data.domain())?.into(),
-            attributed_to: data.local_user().ap_id,
+            attributed_to: Url::parse(&data.local_user().await?.id).unwrap().into(),
             to: vec![public()],
             content: format!("Hello {}", creator.name),
             in_reply_to: Some(json.id.clone()),

@@ -5,6 +5,7 @@ use clap::Parser;
 use database::Database;
 use http::{http_get_user, http_post_user_inbox, webfinger};
 use objects::person::DbUser;
+use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -15,6 +16,8 @@ use std::{
 use tokio::signal;
 use tracing::info;
 
+use crate::database::{Config, State};
+
 mod entities;
 mod activities;
 mod database;
@@ -22,15 +25,6 @@ mod error;
 mod http;
 mod objects;
 mod utils;
-
-#[derive(Debug, Clone)]
-struct Config {}
-
-#[derive(Debug, Clone)]
-struct State {
-    database: Arc<Database>,
-    config: Arc<Config>,
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
@@ -63,6 +57,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let server_url = env::var("LISTEN").unwrap_or("127.0.0.1:8080".to_string());
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let local_user = DbUser::new(
         env::var("FEDERATED_DOMAIN")
@@ -78,16 +73,18 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         users: Mutex::new(vec![local_user]),
     });
 
+    let db = sea_orm::Database::connect(database_url).await?;
+
     let config = Config {};
 
     let state: State = State {
-        database: new_database,
+        database_connection: db.into(),
         config: Arc::new(config),
     };
 
     let data = FederationConfig::builder()
         .domain(env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set"))
-        .app_data(state.clone().database)
+        .app_data(state.clone())
         .build()
         .await?;
 

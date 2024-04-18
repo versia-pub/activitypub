@@ -1,9 +1,5 @@
 use crate::{
-    database::DatabaseHandle,
-    error::Error,
-    objects::post::DbPost,
-    objects::{person::DbUser, post::Note},
-    utils::generate_object_id,
+    database::StateHandle, entities::{post, user}, error::Error, objects::{person::DbUser, post::{DbPost, Note}}, utils::generate_object_id
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
@@ -19,7 +15,7 @@ use url::Url;
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CreatePost {
-    pub(crate) actor: ObjectId<DbUser>,
+    pub(crate) actor: ObjectId<user::Model>,
     #[serde(deserialize_with = "deserialize_one_or_many")]
     pub(crate) to: Vec<Url>,
     pub(crate) object: Note,
@@ -29,7 +25,7 @@ pub struct CreatePost {
 }
 
 impl CreatePost {
-    pub async fn send(note: Note, inbox: Url, data: &Data<DatabaseHandle>) -> Result<(), Error> {
+    pub async fn send(note: Note, inbox: Url, data: &Data<StateHandle>) -> Result<(), Error> {
         print!("Sending reply to {}", &note.attributed_to);
         let create = CreatePost {
             actor: note.attributed_to.clone(),
@@ -40,7 +36,7 @@ impl CreatePost {
         };
         let create_with_context = WithContext::new_default(create);
         let sends =
-            SendActivityTask::prepare(&create_with_context, &data.local_user(), vec![inbox], data)
+            SendActivityTask::prepare(&create_with_context, &data.local_user().await?, vec![inbox], data)
                 .await?;
         for send in sends {
             send.sign_and_send(data).await?;
@@ -51,7 +47,7 @@ impl CreatePost {
 
 #[async_trait::async_trait]
 impl ActivityHandler for CreatePost {
-    type DataType = DatabaseHandle;
+    type DataType = StateHandle;
     type Error = crate::error::Error;
 
     fn id(&self) -> &Url {
@@ -63,12 +59,12 @@ impl ActivityHandler for CreatePost {
     }
 
     async fn verify(&self, data: &Data<Self::DataType>) -> Result<(), Self::Error> {
-        DbPost::verify(&self.object, &self.id, data).await?;
+        post::Model::verify(&self.object, &self.id, data).await?;
         Ok(())
     }
 
     async fn receive(self, data: &Data<Self::DataType>) -> Result<(), Self::Error> {
-        DbPost::from_json(self.object, data).await?;
+        post::Model::from_json(self.object, data).await?;
         Ok(())
     }
 }
