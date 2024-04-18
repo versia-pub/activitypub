@@ -84,6 +84,8 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
 
     let db = sea_orm::Database::connect(database_url).await?;
 
+    info!("Connected to database: {:?}", db);
+
     let user = user.insert(&db).await;
 
     if let Err(err) = user {
