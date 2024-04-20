@@ -15,8 +15,8 @@ use activitypub_federation::{
 use chrono::{prelude, DateTime, Utc};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
-use tracing::info;
 use std::fmt::Debug;
+use tracing::info;
 use url::Url;
 
 #[derive(Debug, Clone)]
