@@ -24,5 +24,5 @@ jobs:
       - name: Check flakes
         run: nix flake check
       - name: Build migrations
-        run: nix build .#migration
+        run: nix build .#ls-ap-migration
         
