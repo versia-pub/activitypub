@@ -6,6 +6,7 @@
     systems.url = "github:nix-systems/default";
 
     naersk.url = "github:nix-community/naersk";
+    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
 
     # Dev tools
     treefmt-nix.url = "github:numtide/treefmt-nix";
@@ -17,6 +18,7 @@
       systems = import inputs.systems;
       imports = [
         inputs.treefmt-nix.flakeModule
+        inputs.flake-parts.flakeModules.easyOverlay
       ];
       perSystem = { config, self', pkgs, lib, system, ... }:
         let
@@ -36,6 +38,9 @@
           };
         in
         {
+          overlayAttrs = {
+            inherit (config.packages) lysand-ap-layer ls-ap-migration;
+          };
           # Rust package
           packages.default = naersk'.buildPackage {
             inherit (cargoToml.package) name version;
@@ -46,7 +51,16 @@
               pkg-config
             ];
           };
-          packages.migration = naersk'.buildPackage {
+          packages.lysand-ap-layer = naersk'.buildPackage {
+            inherit (cargoToml.package) name version;
+            src = ./.;
+            buildInputs = nonRustDeps;
+            nativeBuildInputs = with pkgs; [
+              rust-toolchain
+              pkg-config
+            ];
+          };
+          packages.ls-ap-migration = naersk'.buildPackage {
             inherit (cargoMigToml.package) name version;
             src = ./migration;
             buildInputs = nonRustDeps;
