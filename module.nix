@@ -12,7 +12,7 @@ let
 
   hasLocalPostgresDB =
     let
-      url = cfg.settings.database.url or "";
+      url = cfg.database.url or "";
       localStrings = [ "localhost" "127.0.0.1" "/run/postgresql" ];
       hasLocalStrings = lib.any (lib.flip lib.hasInfix url) localStrings;
     in
@@ -39,8 +39,8 @@ let
 
     services.postgresql = {
       enable = true;
-      ensureUsers = lib.singleton { name = cfg.settings.db.user; ensureDBOwnership = true; };
-      ensureDatabases = lib.singleton cfg.settings.db.dbname;
+      ensureUsers = lib.singleton { name = cfg.database.user; ensureDBOwnership = true; };
+      ensureDatabases = lib.singleton cfg.database.dbname;
     };
   };
   nginxConfig = lib.mkIf cfg.nginx.enable {
