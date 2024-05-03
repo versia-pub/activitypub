@@ -39,8 +39,6 @@ pub struct Note {
     content: String,
     in_reply_to: Option<ObjectId<post::Model>>,
     tag: Vec<Mention>,
-    url: String,
-    published: String,
     sensitive: bool,
 }
 
@@ -92,7 +90,7 @@ impl Object for post::Model {
             local: Set(false),
             visibility: Set("public".to_string()), // TODO: make this use the real visibility
             sensitive: Set(json.sensitive.clone()),
-            url: Set(json.url.clone()),
+            url: Set(json.id.clone().to_string()),
             ..Default::default()
         };
         let post = post
@@ -114,10 +112,8 @@ impl Object for post::Model {
         let id: ObjectId<post::Model> = generate_object_id(data.domain())?.into();
         let note = Note {
             kind: Default::default(),
-            url: id.clone().to_string(),
             id,
             sensitive: false,
-            published: chrono::Utc::now().to_rfc3339(),
             attributed_to: Url::parse(&data.local_user().await?.id).unwrap().into(),
             to: vec![public()],
             content: format!("Hello {}", creator.name),
