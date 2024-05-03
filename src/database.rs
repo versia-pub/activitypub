@@ -35,7 +35,7 @@ impl State {
         if name == db_user.username {
             Ok(db_user)
         } else {
-            Err(anyhow!("Invalid user {name}").into())
+            Err(anyhow!("Invalid user {name} // {0}", db_user.username).into())
         }
     }
 }
