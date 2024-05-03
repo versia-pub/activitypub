@@ -39,6 +39,9 @@ pub struct Note {
     content: String,
     in_reply_to: Option<ObjectId<post::Model>>,
     tag: Vec<Mention>,
+    url: String,
+    published: String,
+    sensitive: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -84,7 +87,12 @@ impl Object for post::Model {
             content: Set(json.content.clone()),
             id: Set(json.id.to_string()),
             creator: Set(creator.id.to_string()),
+            created_at: Set(chrono::Utc::now()), //TODO: make this use the real timestamp
+            content_type: Set("text/plain".to_string()), // TODO: make this use the real content type
             local: Set(false),
+            visibility: Set("public".to_string()), // TODO: make this use the real visibility
+            sensitive: Set(json.sensitive.clone()),
+            url: Set(json.url.clone()),
             ..Default::default()
         };
         let post = post
@@ -103,9 +111,13 @@ impl Object for post::Model {
             href: Url::parse(&creator.id)?,
             kind: Default::default(),
         };
+        let id: ObjectId<post::Model> = generate_object_id(data.domain())?.into();
         let note = Note {
             kind: Default::default(),
-            id: generate_object_id(data.domain())?.into(),
+            url: id.clone().to_string(),
+            id,
+            sensitive: false,
+            published: chrono::Utc::now().to_rfc3339(),
             attributed_to: Url::parse(&data.local_user().await?.id).unwrap().into(),
             to: vec![public()],
             content: format!("Hello {}", creator.name),
