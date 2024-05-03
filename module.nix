@@ -43,6 +43,12 @@ let
       ensureDatabases = lib.singleton cfg.database.dbname;
     };
   };
+  dbconfone = lib.mkIf cfg.database.createLocally {
+      systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}";
+  };
+  dbconftwo = lib.mkIf (cfg.database.createLocally == false) {
+      systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
+    };
   nginxConfig = lib.mkIf cfg.nginx.enable {
     services.nginx =
       let
@@ -223,12 +229,8 @@ in
   config = mkIf cfg.enable (lib.mkMerge [
     localDatabaseConfig
     nginxConfig
-    lib.mkIf cfg.database.createLocally {
-      systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}";
-    }
-    lib.mkIf (cfg.database.createLocally == false) {
-      systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
-    }
+    dbconfone
+    dbconftwo
     {
       systemd.services.lysandap = {
         wantedBy = [ "multi-user.target" ];
