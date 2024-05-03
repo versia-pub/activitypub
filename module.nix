@@ -223,7 +223,6 @@ in
   config = mkIf cfg.enable (lib.mkMerge [
     localDatabaseConfig
     nginxConfig
-    systemd.services.lysandap
     lib.mkIf cfg.database.createLocally {
       systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}";
     }
