@@ -18,7 +18,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::signal;
-use tracing::info;
+use tracing::{info, instrument::WithSubscriber};
 use url::Url;
 
 use crate::database::{Config, State};
@@ -107,6 +107,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         .domain(env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set"))
         .app_data(state.clone())
         .http_signature_compat(true)
+        .signed_fetch_actor(&state.local_user().await.unwrap())
         .build()
         .await?;
 
