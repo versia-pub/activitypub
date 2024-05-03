@@ -1,9 +1,9 @@
 use super::entities::prelude::User;
-use crate::{entities::user, error::Error, objects::person::DbUser};
+use crate::{entities::user, error::Error, objects::person::DbUser, LOCAL_USER_NAME};
 use anyhow::anyhow;
-use sea_orm::{DatabaseConnection, EntityTrait};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex};
+use std::{env, sync::{Arc, Mutex}};
 
 #[derive(Debug, Clone)]
 pub struct Config {}
@@ -24,6 +24,7 @@ pub struct Database {
 impl State {
     pub async fn local_user(&self) -> Result<user::Model, Error> {
         let user = User::find()
+            .filter(user::Column::Username.eq(env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string())))
             .one(self.database_connection.as_ref())
             .await?
             .unwrap();
