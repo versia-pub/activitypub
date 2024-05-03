@@ -44,10 +44,24 @@ let
     };
   };
   dbconfone = lib.mkIf cfg.database.createLocally {
-      systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}";
+      systemd.services.lysandap.serviceConfig.Environment = {
+        DATABASE_URL = "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}";
+        "PORT" = "${toString cfg.port}";
+        "ADDRESS" = "${cfg.address}:${toString cfg.port}";
+        "FEDERATED_DOMAIN" = cfg.domain;
+        "SERVICE_SCALE" = toString cfg.serviceScale;
+        "LOCAL_USER_NAME" = "example";
+      };
   };
   dbconftwo = lib.mkIf (cfg.database.createLocally == false) {
-      systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
+      systemd.services.lysandap.serviceConfig.Environment = {
+        DATABASE_URL = "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
+        "PORT" = "${toString cfg.port}";
+        "ADDRESS" = "${cfg.address}:${toString cfg.port}";
+        "FEDERATED_DOMAIN" = cfg.domain;
+        "SERVICE_SCALE" = toString cfg.serviceScale;
+        "LOCAL_USER_NAME" = "example";
+      };
     };
   nginxConfig = lib.mkIf cfg.nginx.enable {
     services.nginx =
@@ -241,7 +255,7 @@ in
         serviceConfig = {
           ExecStart = "${cfg.package}/bin/lysandap";
           ExecStartPre = "${cfg.mig-package}/bin/ls-ap-migration up";
-          Environment = {
+          Environment = lib.mkDefault {
             "PORT" = "${toString cfg.port}";
             "ADDRESS" = "${cfg.address}:${toString cfg.port}";
             "FEDERATED_DOMAIN" = cfg.domain;
