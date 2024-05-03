@@ -17,12 +17,12 @@
     inputs.flake-parts.lib.mkFlake { inherit inputs self; } {
       systems = import inputs.systems;
       flake = {
-          nixosModules = {
-            default = {
-              imports = [ ./module.nix ];
-              nixpkgs.overlays = [ self.overlays.default ];
-            };
+        nixosModules = {
+          default = {
+            imports = [ ./module.nix ];
+            nixpkgs.overlays = [ self.overlays.default ];
           };
+        };
       };
       imports = [
         inputs.treefmt-nix.flakeModule

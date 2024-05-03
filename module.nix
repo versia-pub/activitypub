@@ -43,30 +43,31 @@ let
       ensureDatabases = lib.singleton cfg.settings.db.dbname;
     };
   };
-   nginxConfig = lib.mkIf cfg.nginx.enable {
-    services.nginx = let
-      ip = if cfg.address == "0.0.0.0" then "127.0.0.1" else cfg.address;
-    in
-    {
-      enable = true;
-      virtualHosts.${cfg.domain} = {
-        locations."/".proxyPass =
-          if cfg.serviceScale == 1 then
-            "http://${ip}:${toString cfg.port}"
-          else "http://upstream-invidious";
+  nginxConfig = lib.mkIf cfg.nginx.enable {
+    services.nginx =
+      let
+        ip = if cfg.address == "0.0.0.0" then "127.0.0.1" else cfg.address;
+      in
+      {
+        enable = true;
+        virtualHosts.${cfg.domain} = {
+          locations."/".proxyPass =
+            if cfg.serviceScale == 1 then
+              "http://${ip}:${toString cfg.port}"
+            else "http://upstream-invidious";
 
-        enableACME = lib.mkDefault true;
-        forceSSL = lib.mkDefault true;
+          enableACME = lib.mkDefault true;
+          forceSSL = lib.mkDefault true;
+        };
+        upstreams = lib.mkIf (cfg.serviceScale > 1) {
+          "upstream-invidious".servers = builtins.listToAttrs (builtins.genList
+            (scaleIndex: {
+              name = "${ip}:${toString (cfg.port + scaleIndex)}";
+              value = { };
+            })
+            cfg.serviceScale);
+        };
       };
-      upstreams = lib.mkIf (cfg.serviceScale > 1) {
-        "upstream-invidious".servers = builtins.listToAttrs (builtins.genList
-          (scaleIndex: {
-            name = "${ip}:${toString (cfg.port + scaleIndex)}";
-            value = { };
-          })
-          cfg.serviceScale);
-      };
-    };
 
     assertions = [{
       assertion = cfg.domain != null;
