@@ -4,7 +4,7 @@ let
   # Shorter name to access final settings a 
   # user of module HAS ACTUALLY SET.
   # cfg is a typical convention.
-  cfg = config.services.lysand;
+  cfg = config.services.lysand.ap;
 
   # unused when the entrypoint is flake
   flake = import ../flake-compat.nix;
@@ -42,6 +42,36 @@ let
       ensureUsers = lib.singleton { name = cfg.settings.db.user; ensureDBOwnership = true; };
       ensureDatabases = lib.singleton cfg.settings.db.dbname;
     };
+  };
+   nginxConfig = lib.mkIf cfg.nginx.enable {
+    services.nginx = let
+      ip = if cfg.address == "0.0.0.0" then "127.0.0.1" else cfg.address;
+    in
+    {
+      enable = true;
+      virtualHosts.${cfg.domain} = {
+        locations."/".proxyPass =
+          if cfg.serviceScale == 1 then
+            "http://${ip}:${toString cfg.port}"
+          else "http://upstream-invidious";
+
+        enableACME = lib.mkDefault true;
+        forceSSL = lib.mkDefault true;
+      };
+      upstreams = lib.mkIf (cfg.serviceScale > 1) {
+        "upstream-invidious".servers = builtins.listToAttrs (builtins.genList
+          (scaleIndex: {
+            name = "${ip}:${toString (cfg.port + scaleIndex)}";
+            value = { };
+          })
+          cfg.serviceScale);
+      };
+    };
+
+    assertions = [{
+      assertion = cfg.domain != null;
+      message = "To use services.lysand.ap.nginx, you need to set services.lysand.ap.domain";
+    }];
   };
 in
 {
@@ -198,7 +228,21 @@ in
         wants = [ "network-online.target" ];
         after = [ "network-online.target" ] ++ lib.optional cfg.database.createLocally "postgresql.service";
         requires = lib.optional cfg.database.createLocally "postgresql.service";
+        description = "Lysand AP layer";
         serviceConfig = {
+          ExecStart = "${cfg.package}/bin/lysandap";
+          ExecStartPre = "${cfg.mig-package}/bin/ls-ap-migration up";
+          Environment = {
+            "PORT" = "${toString cfg.port}";
+            "ADDRESS" = "${cfg.address}:${toString cfg.port}";
+            "DATABASE_URL" = lib.mkIf hasLocalPostgresDB
+              "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}"
+              "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
+            "FEDERATED_DOMAIN" = cfg.domain;
+            "SERVICE_SCALE" = toString cfg.serviceScale;
+            "LOCAL_USER_NAME" = "example";
+          };
+
           RestartSec = "2s";
           DynamicUser = true;
           User = lib.mkIf (cfg.database.createLocally || cfg.serviceScale > 1) "lysandap";

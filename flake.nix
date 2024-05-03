@@ -13,9 +13,17 @@
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs@{ flake-parts, ... }:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = inputs@{ flake-parts, self, ... }:
+    inputs.flake-parts.lib.mkFlake { inherit inputs self; } {
       systems = import inputs.systems;
+      flake = {
+          nixosModules = {
+            default = {
+              imports = [ ./module.nix ];
+              nixpkgs.overlays = [ self.overlays.default ];
+            };
+          };
+      };
       imports = [
         inputs.treefmt-nix.flakeModule
         inputs.flake-parts.flakeModules.easyOverlay
