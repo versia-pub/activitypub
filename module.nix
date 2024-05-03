@@ -223,6 +223,13 @@ in
   config = mkIf cfg.enable (lib.mkMerge [
     localDatabaseConfig
     nginxConfig
+    systemd.services.lysandap
+    lib.mkIf cfg.database.createLocally {
+      systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}";
+    }
+    lib.mkIf (cfg.database.createLocally == false) {
+      systemd.services.lysandap.serviceConfig.Environment.DATABASE_URL = "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
+    }
     {
       systemd.services.lysandap = {
         wantedBy = [ "multi-user.target" ];
@@ -236,9 +243,6 @@ in
           Environment = {
             "PORT" = "${toString cfg.port}";
             "ADDRESS" = "${cfg.address}:${toString cfg.port}";
-            "DATABASE_URL" = lib.mkIf hasLocalPostgresDB
-              "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}"
-              "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
             "FEDERATED_DOMAIN" = cfg.domain;
             "SERVICE_SCALE" = toString cfg.serviceScale;
             "LOCAL_USER_NAME" = "example";
