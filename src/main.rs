@@ -80,7 +80,7 @@ async fn post_manually(
         sensitive: false,
         attributed_to: Url::parse(&data.local_user().await?.id).unwrap().into(),
         to: vec![public()],
-        content: format!("Hello {}", creator.name),
+        content: format!("{} {}", path.1, creator.name),
         tag: vec![mention],
         in_reply_to: None,
     };
