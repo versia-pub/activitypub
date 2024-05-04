@@ -13,9 +13,9 @@ use activitypub_federation::{
     traits::{ActivityHandler, Actor, Object},
 };
 use chrono::{prelude, DateTime, Utc};
+use entities::prelude::User;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
-use entities::prelude::User;
 use std::fmt::Debug;
 use tracing::info;
 use url::Url;
@@ -123,7 +123,8 @@ impl Object for user::Model {
     ) -> Result<Self, Self::Error> {
         let query = User::find()
             .filter(user::Column::Id.eq(json.id.inner().as_str()))
-            .one(_data.database_connection.as_ref()).await?;
+            .one(_data.database_connection.as_ref())
+            .await?;
         if let Some(user) = query {
             return Ok(user);
         }
