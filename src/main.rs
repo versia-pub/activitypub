@@ -155,6 +155,8 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         .build()
         .await?;
 
+    let _ = FEDERATION_CONFIG.set(data.clone());
+
     let mut labels = HashMap::new();
     labels.insert(
         "domain".to_string(),
