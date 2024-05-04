@@ -27,6 +27,8 @@ num_cpus = "1.16.0"
 actix-web-prom = { version = "0.8.0", features = ["process"] }
 serde_json = "1.0.115"
 chrono = "0.4.38"
+lazy_static = "1.4.0"
+async_once = "0.2.6"
 
 [dependencies.sea-orm]
 version = "0.12.0"

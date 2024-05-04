@@ -443,6 +443,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "async_once"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ce4f10ea3abcd6617873bae9f91d1c5332b4a778bd9ce34d0cd517474c1de82"
+
+[[package]]
 name = "atoi"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1812,10 +1818,12 @@ dependencies = [
  "actix-web-prom",
  "anyhow",
  "async-trait",
+ "async_once",
  "chrono",
  "clap",
  "enum_delegate",
  "env_logger",
+ "lazy_static",
  "num_cpus",
  "rand",
  "sea-orm",

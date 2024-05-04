@@ -31,15 +31,15 @@ pub struct DbPost {
 #[serde(rename_all = "camelCase")]
 pub struct Note {
     #[serde(rename = "type")]
-    kind: NoteType,
-    id: ObjectId<post::Model>,
+    pub(crate) kind: NoteType,
+    pub(crate) id: ObjectId<post::Model>,
     pub(crate) attributed_to: ObjectId<user::Model>,
     #[serde(deserialize_with = "deserialize_one_or_many")]
     pub(crate) to: Vec<Url>,
-    content: String,
-    in_reply_to: Option<ObjectId<post::Model>>,
-    tag: Vec<Mention>,
-    sensitive: bool,
+    pub(crate) content: String,
+    pub(crate) in_reply_to: Option<ObjectId<post::Model>>,
+    pub(crate) tag: Vec<Mention>,
+    pub(crate) sensitive: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

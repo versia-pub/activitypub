@@ -1,12 +1,14 @@
 use activitypub_federation::{
-    config::{FederationConfig, FederationMiddleware},
-    http_signatures::generate_actor_keypair,
+    config::{Data, FederationConfig, FederationMiddleware}, fetch::{object_id::ObjectId, webfinger::webfinger_resolve_actor}, http_signatures::generate_actor_keypair, traits::Actor
 };
-use actix_web::{get, http::KeepAlive, middleware, web, App, Error, HttpResponse, HttpServer};
+use activitystreams_kinds::public;
+use actix_web::{get, http::KeepAlive, middleware, post, web, App, Error, HttpResponse, HttpServer};
 use actix_web_prom::PrometheusMetricsBuilder;
+use async_once::AsyncOnce;
 use chrono::{DateTime, Utc};
 use clap::Parser;
 use database::Database;
+use entities::post;
 use http::{http_get_user, http_post_user_inbox, webfinger};
 use objects::person::DbUser;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
@@ -15,13 +17,17 @@ use std::{
     collections::HashMap,
     env,
     net::ToSocketAddrs,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, OnceLock},
 };
 use tokio::signal;
 use tracing::{info, instrument::WithSubscriber};
 use url::Url;
 
-use crate::database::{Config, State};
+use crate::{activities::create_post::CreatePost, database::{Config, State}, objects::post::{Mention, Note}};
+use crate::entities::user;
+use crate::utils::generate_object_id;
+use lazy_static::lazy_static;
+
 
 mod activities;
 mod database;
@@ -54,26 +60,60 @@ async fn index(_: web::Data<State>) -> actix_web::Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().json(Response { health: true }))
 }
 
-const DOMAIN: &str = "example.com";
+#[post("/test/postmanually/{user}/{post}")]
+async fn post_manually(
+    path: web::Path<(String, String)>,
+    state: web::Data<State>,
+) -> actix_web::Result<HttpResponse, error::Error> {
+    let local_user = state.local_user().await?;
+    let data = FEDERATION_CONFIG.get().unwrap();
+    let creator = webfinger_resolve_actor::<State, user::Model>(path.0.as_str(), &data.to_request_data()).await?;
+
+    let mention = Mention {
+        href: Url::parse(&creator.id)?,
+        kind: Default::default(),
+    };
+    let id: ObjectId<post::Model> = generate_object_id(data.domain())?.into();
+    let note = Note {
+        kind: Default::default(),
+        id,
+        sensitive: false,
+        attributed_to: Url::parse(&data.local_user().await?.id).unwrap().into(),
+        to: vec![public()],
+        content: format!("Hello {}", creator.name),
+        tag: vec![mention],
+        in_reply_to: None,
+    };
+
+    CreatePost::send(note, creator.shared_inbox_or_inbox(), &data.to_request_data()).await?;
+
+    Ok(HttpResponse::Ok().json(Response { health: true }))
+}
+
+const DOMAIN_DEF: &str = "example.com";
 const LOCAL_USER_NAME: &str = "example";
+
+lazy_static!{
+    static ref SERVER_URL: String = env::var("LISTEN").unwrap_or("127.0.0.1:8080".to_string());
+    static ref DATABASE_URL: String = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    static ref USERNAME: String = env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string());
+    static ref DOMAIN: String = env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN_DEF.to_string());
+}
+
+static DB: OnceLock<DatabaseConnection> = OnceLock::new();
+static FEDERATION_CONFIG: OnceLock<FederationConfig<State>> = OnceLock::new();
 
 #[actix_web::main]
 async fn main() -> actix_web::Result<(), anyhow::Error> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    let server_url = env::var("LISTEN").unwrap_or("127.0.0.1:8080".to_string());
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    let username = env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string());
-    let domain = env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN.to_string());
-
-    let ap_id = Url::parse(&format!("https://{}/{}", domain, &username))?;
-    let inbox = Url::parse(&format!("https://{}/{}/inbox", domain, &username))?;
+    let ap_id = Url::parse(&format!("https://{}/{}", DOMAIN.to_string(), &USERNAME.to_string()))?;
+    let inbox = Url::parse(&format!("https://{}/{}/inbox", DOMAIN.to_string(), &USERNAME.to_string()))?;
     let keypair = generate_actor_keypair()?;
 
     let user = entities::user::ActiveModel {
         id: Set(ap_id.clone().into()),
-        username: Set(username),
+        username: Set(USERNAME.to_string()),
         name: Set("Test account <3".to_string()),
         inbox: Set(inbox.to_string()),
         public_key: Set(keypair.public_key.clone()),
@@ -87,11 +127,15 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         ..Default::default()
     };
 
-    let db = sea_orm::Database::connect(database_url).await?;
+    let db = sea_orm::Database::connect(DATABASE_URL.to_string()).await?;
 
     info!("Connected to database: {:?}", db);
 
-    let user = user.insert(&db).await;
+    DB.set(db).expect("We were not able to save the DB conn into memory");
+
+    let db = DB.get().unwrap();
+
+    let user = user.insert(db).await;
 
     if let Err(err) = user {
         eprintln!("Error inserting user: {:?}", err);
@@ -100,7 +144,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     }
 
     let state: State = State {
-        database_connection: db.into(),
+        database_connection: Arc::new(db.clone()),
     };
 
     let data = FederationConfig::builder()
@@ -137,12 +181,13 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             .wrap(middleware::Logger::default()) // enable logger
             .wrap(prometheus.clone())
             .wrap(FederationMiddleware::new(data.clone()))
+            .service(post_manually)
             .route("/{user}", web::get().to(http_get_user))
             .route("/{user}/inbox", web::post().to(http_post_user_inbox))
             .route("/.well-known/webfinger", web::get().to(webfinger))
             .service(index)
     })
-    .bind(&server_url)?
+    .bind(SERVER_URL.to_string())?
     .workers(num_cpus::get())
     .shutdown_timeout(20)
     .keep_alive(KeepAlive::Os)
