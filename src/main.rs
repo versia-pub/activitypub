@@ -60,7 +60,7 @@ async fn index(_: web::Data<State>) -> actix_web::Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().json(Response { health: true }))
 }
 
-#[post("/test/postmanually/{user}/{post}")]
+#[get("/test/postmanually/{user}/{post}")]
 async fn post_manually(
     path: web::Path<(String, String)>,
     state: web::Data<State>,
