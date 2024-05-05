@@ -103,25 +103,6 @@ impl Object for post::Model {
         }
         info!("Post inserted: {:?}", post.as_ref().unwrap());
 
-        let post = post.unwrap();
-
-        let mention = Mention {
-            href: Url::parse(&creator.id)?,
-            kind: Default::default(),
-        };
-        let id: ObjectId<post::Model> = generate_object_id(data.domain())?.into();
-        let note = Note {
-            kind: Default::default(),
-            id,
-            sensitive: false,
-            attributed_to: Url::parse(&data.local_user().await?.id).unwrap().into(),
-            to: vec![public()],
-            content: format!("Hello {}", creator.name),
-            in_reply_to: Some(json.id.clone()),
-            tag: vec![mention],
-        };
-        CreatePost::send(note, creator.shared_inbox_or_inbox(), data).await?;
-
-        Ok(post)
+        Ok(post.unwrap())
     }
 }
