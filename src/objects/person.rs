@@ -1,5 +1,5 @@
 use crate::{
-    activities::create_post::CreatePost,
+    activities::{create_post::CreatePost, follow::Follow},
     database::{State, StateHandle},
     entities::{self, user},
     error::Error,
@@ -40,6 +40,7 @@ pub struct DbUser {
 #[enum_delegate::implement(ActivityHandler)]
 pub enum PersonAcceptedActivities {
     CreateNote(CreatePost),
+    Follow(Follow),
 }
 
 impl DbUser {

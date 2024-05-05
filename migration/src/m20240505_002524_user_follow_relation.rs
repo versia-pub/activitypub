@@ -8,7 +8,6 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-
         manager
             .create_table(
                 Table::create()
@@ -21,8 +20,16 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(FollowRelation::FolloweeId).string().not_null())
-                    .col(ColumnDef::new(FollowRelation::FollowerId).string().not_null())
+                    .col(
+                        ColumnDef::new(FollowRelation::FolloweeId)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(FollowRelation::FollowerId)
+                            .string()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(FollowRelation::FolloweeHost).string())
                     .col(ColumnDef::new(FollowRelation::FollowerHost).string())
                     .col(ColumnDef::new(FollowRelation::FolloweeInbox).string())
@@ -62,5 +69,5 @@ enum FollowRelation {
     FolloweeHost,
     FollowerHost,
     FolloweeInbox,
-    FollowerInbox
+    FollowerInbox,
 }

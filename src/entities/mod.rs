@@ -2,6 +2,6 @@
 
 pub mod prelude;
 
+pub mod follow_relation;
 pub mod post;
 pub mod user;
-pub mod follow_relation;
