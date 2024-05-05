@@ -11,3 +11,8 @@ pub fn generate_object_id(domain: &str) -> Result<Url, ParseError> {
         .collect();
     Url::parse(&format!("https://{}/objects/{}", domain, id))
 }
+
+/// Generate a follow accept id
+pub fn generate_follow_accept_id(domain: &str, db_id: i32) -> Result<Url, ParseError> {
+    Url::parse(&format!("https://{}/activities/follow/{}", domain, db_id))
+}

@@ -28,13 +28,13 @@ use tokio::signal;
 use tracing::{info, instrument::WithSubscriber};
 use url::Url;
 
-use crate::entities::user;
 use crate::utils::generate_object_id;
 use crate::{
     activities::create_post::CreatePost,
     database::{Config, State},
     objects::post::{Mention, Note},
 };
+use crate::{activities::follow::Follow, entities::user};
 use lazy_static::lazy_static;
 
 mod activities;
@@ -98,6 +98,31 @@ async fn post_manually(
     CreatePost::send(
         note,
         creator.shared_inbox_or_inbox(),
+        &data.to_request_data(),
+    )
+    .await?;
+
+    Ok(HttpResponse::Ok().json(Response { health: true }))
+}
+
+#[get("/test/follow/{user}")]
+async fn follow_manually(
+    path: web::Path<String>,
+    state: web::Data<State>,
+) -> actix_web::Result<HttpResponse, error::Error> {
+    let local_user = state.local_user().await?;
+    let data = FEDERATION_CONFIG.get().unwrap();
+    let followee =
+        webfinger_resolve_actor::<State, user::Model>(path.as_str(), &data.to_request_data())
+            .await?;
+
+    let followee_object: ObjectId<user::Model> = Url::parse(&followee.id)?.into();
+    let localuser_object: ObjectId<user::Model> = Url::parse(&local_user.id)?.into();
+
+    Follow::send(
+        localuser_object,
+        followee_object,
+        followee.shared_inbox_or_inbox(),
         &data.to_request_data(),
     )
     .await?;
@@ -209,6 +234,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             .wrap(prometheus.clone())
             .wrap(FederationMiddleware::new(data.clone()))
             .service(post_manually)
+            .service(follow_manually)
             .route("/{user}", web::get().to(http_get_user))
             .route("/{user}/inbox", web::post().to(http_post_user_inbox))
             .route("/.well-known/webfinger", web::get().to(webfinger))
