@@ -1,5 +1,5 @@
 use crate::{
-    activities::{create_post::CreatePost, follow::Follow},
+    activities::{create_post::CreatePost, follow::{self, Follow}},
     database::{State, StateHandle},
     entities::{self, user},
     error::Error,
@@ -12,6 +12,7 @@ use activitypub_federation::{
     protocol::{public_key::PublicKey, verification::verify_domains_match},
     traits::{ActivityHandler, Actor, Object},
 };
+use actix_web::http::header::Accept;
 use chrono::{prelude, DateTime, Utc};
 use entities::prelude::User;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
@@ -41,6 +42,7 @@ pub struct DbUser {
 pub enum PersonAcceptedActivities {
     CreateNote(CreatePost),
     Follow(Follow),
+    Accept(follow::Accept)
 }
 
 impl DbUser {
