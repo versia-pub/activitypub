@@ -63,7 +63,7 @@ impl Object for post::Model {
     }
 
     async fn into_json(self, _data: &Data<Self::DataType>) -> Result<Self::Kind, Self::Error> {
-        unimplemented!()
+        todo!()
     }
 
     async fn verify(
