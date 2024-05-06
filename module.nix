@@ -44,7 +44,7 @@ let
     };
   };
   dbconfone = lib.mkIf cfg.database.createLocally {
-    systemd.services.lysandap.Environment = {
+    systemd.services.lysandap.environment = {
       DATABASE_URL = "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}";
       "PORT" = "${toString cfg.port}";
       "ADDRESS" = "${cfg.address}:${toString cfg.port}";
@@ -54,7 +54,7 @@ let
     };
   };
   dbconftwo = lib.mkIf (cfg.database.createLocally == false) {
-    systemd.services.lysandap.Environment = {
+    systemd.services.lysandap.environment = {
       DATABASE_URL = "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
       "PORT" = "${toString cfg.port}";
       "ADDRESS" = "${cfg.address}:${toString cfg.port}";
@@ -253,7 +253,7 @@ in
         #requires = lib.optional cfg.database.createLocally "postgresql.service";
         script = "${cfg.package}/bin/lysandap";
         preStart = "${cfg.mig-package}/bin/ls-ap-migration up";
-        Environment = lib.mkDefault {
+        environment = lib.mkDefault {
             "PORT" = "${toString cfg.port}";
             "ADDRESS" = "${cfg.address}:${toString cfg.port}";
             "FEDERATED_DOMAIN" = cfg.domain;
