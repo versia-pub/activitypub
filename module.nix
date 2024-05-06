@@ -44,7 +44,7 @@ let
     };
   };
   dbconfone = lib.mkIf cfg.database.createLocally {
-    systemd.services.lysandap.serviceConfig.Environment = {
+    systemd.services.lysandap.Environment = {
       DATABASE_URL = "postgresql:///${cfg.database.user}@localhost/${cfg.database.dbname}";
       "PORT" = "${toString cfg.port}";
       "ADDRESS" = "${cfg.address}:${toString cfg.port}";
@@ -54,7 +54,7 @@ let
     };
   };
   dbconftwo = lib.mkIf (cfg.database.createLocally == false) {
-    systemd.services.lysandap.serviceConfig.Environment = {
+    systemd.services.lysandap.Environment = {
       DATABASE_URL = "postgresql://${cfg.database.user}:${cfg.database.passwordFile}@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.dbname}";
       "PORT" = "${toString cfg.port}";
       "ADDRESS" = "${cfg.address}:${toString cfg.port}";
@@ -248,46 +248,25 @@ in
     {
       systemd.services.lysandap = {
         wantedBy = [ "multi-user.target" ];
-        wants = [ "network-online.target" ];
-        after = [ "network-online.target" ] ++ lib.optional cfg.database.createLocally "postgresql.service";
-        requires = lib.optional cfg.database.createLocally "postgresql.service";
-        description = "Lysand AP layer";
-        serviceConfig = {
-          ExecStart = "${cfg.package}/bin/lysandap";
-          ExecStartPre = "${cfg.mig-package}/bin/ls-ap-migration up";
-          Environment = lib.mkDefault {
+        #wants = [ "network-online.target" ];
+        #after = [ "network-online.target" ] ++ lib.optional cfg.database.createLocally "postgresql.service";
+        #requires = lib.optional cfg.database.createLocally "postgresql.service";
+        script = "${cfg.package}/bin/lysandap";
+        preStart = "${cfg.mig-package}/bin/ls-ap-migration up";
+        Environment = lib.mkDefault {
             "PORT" = "${toString cfg.port}";
             "ADDRESS" = "${cfg.address}:${toString cfg.port}";
             "FEDERATED_DOMAIN" = cfg.domain;
             "SERVICE_SCALE" = toString cfg.serviceScale;
             "LOCAL_USER_NAME" = "example";
-          };
-
-          RestartSec = "2s";
+        };
+        serviceConfig = {
           DynamicUser = true;
           User = lib.mkIf (cfg.database.createLocally || cfg.serviceScale > 1) "lysandap";
           StateDirectory = "lysandap";
           StateDirectoryMode = "0750";
-
-          CapabilityBoundingSet = "";
-          PrivateDevices = true;
-          PrivateUsers = true;
-          ProtectHome = true;
-          ProtectKernelLogs = true;
-          ProtectProc = "invisible";
-          RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
-          RestrictNamespaces = true;
-          SystemCallArchitectures = "native";
-          SystemCallFilter = [ "@system-service" "~@privileged" "~@resources" ];
-
-          # Because of various potential issues related to alpha/beta software, it is recommended to
-          # enable the following options to ensure the Lysand AP instance is restarted daily.
-          # This option enables the automatic restarting of the Invidious instance.
-          # To ensure multiple instances of Invidious are not restarted at the exact same time, a
-          # randomized extra offset of up to 5 minutes is added.
+          WorkingDirectory = cfg.package;
           Restart = lib.mkDefault "always";
-          RuntimeMaxSec = lib.mkDefault "1h";
-          RuntimeRandomizedExtraSec = lib.mkDefault "5min";
         };
       };
     }
