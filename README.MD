@@ -1,7 +1,15 @@
-## Lysand ActivityPub Layer
-[![Nix Flake actions](https://github.com/lysand-org/lysand-ap-layer/actions/workflows/nix-flake.yml/badge.svg)](https://github.com/lysand-org/lysand-ap-layer/actions/workflows/nix-flake.yml)
-A simple activitypub compatibility layer ("bridge"), to make Lysand compatible with the ActivityPub and ActivityStreams protocol.
-The layer is realised in a microservice format.
+
+<p align="center">
+  <a href="https://lysand.org"><img src="https://cdn.lysand.org/logo-long-dark.webp" alt="Lysand Logo" height="110"></a>
+</p>
+
+## Lysand ActivityPub Bridge
+
+[![Nix Flake actions](https://github.com/lysand-org/activitypub/actions/workflows/nix-flake.yml/badge.svg)](https://github.com/lysand-org/activitypub/actions/workflows/nix-flake.yml)
+
+**ActivityPub/ActivityStreams** compatibility layer for [**Lysand Server**](https://github.com/lysand-org/lysand).
+
+Designed as a microservice, runs as its own process and communicates with the main server via HTTP.
 
 ## Development (Flakes)
 
@@ -20,16 +28,22 @@ nix build
 
 We also provide a [`justfile`](https://just.systems/) for Makefile'esque commands.
 
-### Building and running the docker image
+## Building
 
-To build the docker image, run the following command:
+### Docker/Podman
 
-```bash
-> docker build -t f:latest .
-```
-
-To run the docker image, run the following command:
+To build the Docker image, run the following command:
 
 ```bash
-docker run -i -e RUST_LOG="debug" -e DATABASE_URL="postgresql://postgres:postgres@host.docker.internal:5432/database" -e LISTEN="0.0.0.0:8080" -p 8080:8080 f:latest
+docker build -t activitypub:latest .
 ```
+
+To run the docker image, use the [`docker-compose.yml`](./docker-compose.yml) file:
+
+```bash
+wget https://raw.githubusercontent.com/lysand-org/activitypub/main/docker-compose.yml
+
+docker-compose up -d
+```
+
+If you are building from source, make sure to replace the image name in the `docker-compose.yml` file.

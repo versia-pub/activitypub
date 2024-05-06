@@ -1,0 +1,9 @@
+services:
+  activitypub:
+    environment:
+      - RUST_LOG=debug
+      - DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/database
+      - LISTEN=0.0.0.0:8080
+    ports:
+      - 8080:8080
+    image: ghcr.io/lysand-org/activitypub:latest
