@@ -254,11 +254,11 @@ in
         script = "${cfg.package}/bin/lysandap";
         preStart = "${cfg.mig-package}/bin/ls-ap-migration up";
         environment = lib.mkDefault {
-            "PORT" = "${toString cfg.port}";
-            "ADDRESS" = "${cfg.address}:${toString cfg.port}";
-            "FEDERATED_DOMAIN" = cfg.domain;
-            "SERVICE_SCALE" = toString cfg.serviceScale;
-            "LOCAL_USER_NAME" = "example";
+          "PORT" = "${toString cfg.port}";
+          "ADDRESS" = "${cfg.address}:${toString cfg.port}";
+          "FEDERATED_DOMAIN" = cfg.domain;
+          "SERVICE_SCALE" = toString cfg.serviceScale;
+          "LOCAL_USER_NAME" = "example";
         };
         serviceConfig = {
           DynamicUser = true;

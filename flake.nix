@@ -77,6 +77,25 @@
               pkg-config
             ];
           };
+          packages.ociImage = pkgs.dockerTools.buildLayeredImage
+            {
+              name = "lysand-ap-layer";
+              contents = [
+                config.packages.lysand-ap-layer config.packages.ls-ap-migration pkgs.bash
+              ];
+              config = {
+                Cmd = [
+                  "${pkgs.bash}/bin/bash"
+                  "${config.packages.ls-ap-migration}/bin/ls-ap-migration"
+                  "up"
+                  "&&"
+                  "${config.packages.lysand-ap-layer}/bin/lysand-ap-layer"
+                ];
+                ExposedPorts = {
+                  "8080/tcp" = { };
+                };
+              };
+            };
 
           # Rust dev environment
           devShells.default = pkgs.mkShell {
