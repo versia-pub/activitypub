@@ -81,7 +81,9 @@
             {
               name = "lysand-ap-layer";
               contents = [
-                config.packages.lysand-ap-layer config.packages.ls-ap-migration pkgs.bash
+                config.packages.lysand-ap-layer
+                config.packages.ls-ap-migration
+                pkgs.bash
               ];
               config = {
                 Cmd = [

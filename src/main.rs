@@ -42,9 +42,9 @@ mod database;
 mod entities;
 mod error;
 mod http;
+mod lysand;
 mod objects;
 mod utils;
-mod lysand;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {

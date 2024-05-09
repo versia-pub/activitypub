@@ -1,7 +1,7 @@
 use url::Url;
 
 pub enum LysandType {
-    User
+    User,
 }
 
 pub struct User {
@@ -9,5 +9,5 @@ pub struct User {
     id: String,
     uri: Url,
     created_at: String,
-    display_name: Option<String>
+    display_name: Option<String>,
 }
