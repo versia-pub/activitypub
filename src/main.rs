@@ -44,7 +44,7 @@ mod error;
 mod http;
 mod objects;
 mod utils;
-//mod lysand;
+mod lysand;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
