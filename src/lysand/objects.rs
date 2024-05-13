@@ -50,6 +50,30 @@ pub enum LysandType {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum LysandExtensions {
+    #[serde(rename = "org.lysand:microblogging/Announce")]
+    Announce,
+    #[serde(rename = "org.lysand:custom_emojis")]
+    CustomEmojis,
+    #[serde(rename = "org.lysand:reactions/Reaction")]
+    Reaction,
+    #[serde(rename = "org.lysand:reactions")]
+    Reactions,
+    #[serde(rename = "org.lysand:polls")]
+    Polls,
+    #[serde(rename = "org.lysand:is_cat")]
+    IsCat,
+    #[serde(rename = "org.lysand:server_endorsement/Endorsement")]
+    Endorsement,
+    #[serde(rename = "org.lysand:server_endorsement")]
+    EndorsementCollection,
+    #[serde(rename = "org.lysand:reports/Report")]
+    Report,
+    #[serde(rename = "org.lysand:vanity")]
+    Vanity,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PublicKey {
     public_key: String,
     actor: Url,
