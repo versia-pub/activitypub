@@ -29,6 +29,9 @@ serde_json = "1.0.115"
 chrono = "0.4.38"
 lazy_static = "1.4.0"
 async_once = "0.2.6"
+reqwest = { version = "0.12.4", features = ["blocking", "json", "multipart"] }
+time = { version = "0.3.36", features = ["serde"] }
+serde_derive = "1.0.201"
 
 [dependencies.sea-orm]
 version = "0.12.0"
