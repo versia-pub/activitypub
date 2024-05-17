@@ -79,7 +79,8 @@
           };
           packages.ociImage = pkgs.dockerTools.buildLayeredImage
             {
-              name = "lysand-ap-layer";
+              name = "ghcr.io/lysand-org/activitypub";
+              tag = "main";
               contents = [
                 config.packages.lysand-ap-layer
                 config.packages.ls-ap-migration

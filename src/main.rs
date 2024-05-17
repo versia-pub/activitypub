@@ -150,8 +150,8 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     //TODO remove this
-    lysand::test::main().await?;
-    return Ok(());
+    //lysand::test::main().await?;
+    //return Ok(());
 
     let ap_id = Url::parse(&format!(
         "https://{}/{}",

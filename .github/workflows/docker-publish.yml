@@ -5,8 +5,6 @@ on:
     branches: [ "main" ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "main" ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -51,17 +49,13 @@ jobs:
         uses: docker/metadata-action@v5 # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@v5 # v5.0.0
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          provenance: mode=max
-          sbom: true
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: DeterminateSystems/flake-checker-action@main
+      - name: Build docker package
+        run: nix build .#ociImage
+      - name: Load Docker image
+        run: docker load < result
+      - name: Push image to registry
+        if: github.event_name != 'pull_request'
+        run: docker push ghcr.io/$IMAGE_NAME -a
