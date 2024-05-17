@@ -139,7 +139,8 @@ lazy_static! {
     static ref DATABASE_URL: String = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     static ref USERNAME: String =
         env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string());
-    static ref DOMAIN: String = env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN_DEF.to_string());
+    static ref API_DOMAIN: String = env::var("API_DOMAIN").unwrap_or(DOMAIN_DEF.to_string());
+    static ref FEDERATED_DOMAIN: String = env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN_DEF.to_string());
 }
 
 static DB: OnceLock<DatabaseConnection> = OnceLock::new();
@@ -155,12 +156,12 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
 
     let ap_id = Url::parse(&format!(
         "https://{}/{}",
-        DOMAIN.to_string(),
+        API_DOMAIN.to_string(),
         &USERNAME.to_string()
     ))?;
     let inbox = Url::parse(&format!(
         "https://{}/{}/inbox",
-        DOMAIN.to_string(),
+        API_DOMAIN.to_string(),
         &USERNAME.to_string()
     ))?;
     let keypair = generate_actor_keypair()?;
