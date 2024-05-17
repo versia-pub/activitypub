@@ -13,6 +13,7 @@ use time::{
     OffsetDateTime,
 };
 use url::Url;
+use uuid::Uuid;
 
 const FORMAT: Iso8601<6651332276412969266533270467398074368> = Iso8601::<
     {
@@ -47,6 +48,25 @@ pub enum LysandType {
     Undo,
     Extension,
     ServerMetadata,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum CategoryType {
+    Microblog,
+    Forum,
+    Blog,
+    Image,
+    Video,
+    Audio,
+    Messaging
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum VisibilityType {
+    Public,
+    Unlisted,
+    Followers,
+    Direct
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -116,7 +136,7 @@ impl<'de> Deserialize<'de> for ContentFormat {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct FieldKV {
-    key: ContentFormat,
+    name: ContentFormat,
     value: ContentFormat,
 }
 
@@ -135,25 +155,74 @@ pub struct ContentEntry {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct User {
-    public_key: PublicKey,
+    pub public_key: PublicKey,
     #[serde(rename = "type")]
-    rtype: LysandType,
-    id: String,
-    uri: Url,
+    pub rtype: LysandType,
+    pub id: Uuid,
+    pub uri: Url,
     #[serde(with = "iso_lysand")]
-    created_at: OffsetDateTime,
-    display_name: Option<String>,
+    pub created_at: OffsetDateTime,
+    pub display_name: Option<String>,
     // TODO bio: Option<String>,
-    inbox: Url,
-    outbox: Url,
-    featured: Url,
-    followers: Url,
-    following: Url,
-    likes: Url,
-    dislikes: Url,
-    username: String,
-    bio: Option<ContentFormat>,
-    avatar: Option<ContentFormat>,
-    header: Option<ContentFormat>,
-    fields: Option<Vec<FieldKV>>,
+    pub inbox: Url,
+    pub outbox: Url,
+    pub featured: Url,
+    pub followers: Url,
+    pub following: Url,
+    pub likes: Url,
+    pub dislikes: Url,
+    pub username: String,
+    pub bio: Option<ContentFormat>,
+    pub avatar: Option<ContentFormat>,
+    pub header: Option<ContentFormat>,
+    pub fields: Option<Vec<FieldKV>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DeviceInfo {
+    name: String,
+    version: String,
+    url: Url,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LinkPreview {
+    description: String,
+    title: String,
+    link: Url,
+    image: Option<Url>,
+    icon: Option<Url>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Note {
+    #[serde(rename = "type")]
+    pub rtype: LysandType,
+    pub id: Uuid,
+    pub uri: Url,
+    pub author: Url,
+    #[serde(with = "iso_lysand")]
+    pub created_at: OffsetDateTime,
+    pub category: Option<CategoryType>,
+    pub content: Option<ContentFormat>,
+    pub device: Option<DeviceInfo>,
+    pub previews: Option<Vec<LinkPreview>>,
+    pub group: Option<String>,
+    pub attachments: Option<Vec<ContentFormat>>,
+    pub replies_to: Option<Url>,
+    pub quotes: Option<Url>,
+    pub mentions: Option<Vec<Url>>,
+    pub subject: Option<String>,
+    pub is_sensitive: Option<bool>,
+    pub visibility: Option<VisibilityType>,
+    //TODO extensions
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Outbox {
+    pub first: Url,
+    pub last: Url,
+    pub next: Option<Url>,
+    pub prev: Option<Url>,
+    pub items: Vec<Note>,
 }

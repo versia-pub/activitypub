@@ -44,6 +44,15 @@ features = [
   "sqlx-sqlite","sqlx-mysql","with-chrono"
 ]
 
+[dependencies.uuid]
+version = "1.8.0"
+features = [
+    "v4",
+    "v7",
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "serde",
+]
+
 [build-dependencies]
 vcpkg = "0.2.15"
 
