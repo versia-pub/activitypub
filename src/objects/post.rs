@@ -40,6 +40,7 @@ pub struct Note {
     pub(crate) in_reply_to: Option<ObjectId<post::Model>>,
     pub(crate) tag: Vec<Mention>,
     pub(crate) sensitive: bool,
+    pub(crate) cc: Option<Vec<Url>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

@@ -22,10 +22,7 @@ pub async fn main() -> anyhow::Result<()> {
     let user_json = serde_json::to_string_pretty(&SortAlphabetically(&user))?;
     println!("{}", user_json);
 
-    let response_outbox = client
-        .get(user.outbox.as_str())
-        .send()
-        .await?;
+    let response_outbox = client.get(user.outbox.as_str()).send().await?;
 
     let outbox_json = response_outbox.text().await?;
     let outbox = super::superx::deserialize_outbox(outbox_json).await?;

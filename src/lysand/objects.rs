@@ -58,7 +58,7 @@ pub enum CategoryType {
     Image,
     Video,
     Audio,
-    Messaging
+    Messaging,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -66,7 +66,7 @@ pub enum VisibilityType {
     Public,
     Unlisted,
     Followers,
-    Direct
+    Direct,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -191,7 +191,7 @@ pub struct LinkPreview {
     title: String,
     link: Url,
     image: Option<Url>,
-    icon: Option<Url>
+    icon: Option<Url>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
