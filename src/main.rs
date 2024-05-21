@@ -94,6 +94,7 @@ async fn post_manually(
         content: format!("{} {}", path.1, target.name),
         tag: vec![mention],
         in_reply_to: None,
+        cc: vec![].into()
     };
 
     CreatePost::send(

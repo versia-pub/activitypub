@@ -34,7 +34,7 @@ pub fn listen(config: &FederationConfig<StateHandle>) -> Result<(), Error> {
 }
 
 pub fn lysand_inbox(note: web::Json<lysand::objects::Note>, id: web::Path<String>, data: Data<StateHandle>) -> Result<HttpResponse, Error> {
-    tokio::spawn(receive_lysand_note(note.into_inner(), id.into_inner(), data.app_data().clone()));
+    tokio::spawn(receive_lysand_note(note.into_inner(), id.into_inner()));
     Ok(HttpResponse::Created().finish())
 }
 

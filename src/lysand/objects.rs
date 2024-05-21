@@ -108,8 +108,53 @@ pub struct ContentHash {
 }
 
 #[derive(Debug, Clone)]
-struct ContentFormat {
+pub struct ContentFormat {
     x: HashMap<String, ContentEntry>,
+}  
+
+impl ContentFormat {
+    pub async fn select_rich_text(&self) -> anyhow::Result<String> {
+        if let Some(entry) = self.x.get("text/x.misskeymarkdown") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("text/html") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("text/markdown") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("text/plain") {
+            return Ok(entry.content.clone())
+        }
+
+        Ok(self.x.clone().values().next().unwrap().content.clone())
+    }
+
+    pub async fn select_rich_img(&self) -> anyhow::Result<String> {
+        if let Some(entry) = self.x.get("image/webp") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("image/png") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("image/avif") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("image/jxl") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("image/jpeg") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("image/gif") {
+            return Ok(entry.content.clone())
+        }
+        if let Some(entry) = self.x.get("image/bmp") {
+            return Ok(entry.content.clone())
+        }
+
+        Ok(self.x.clone().values().next().unwrap().content.clone())
+    }
 }
 
 impl Serialize for ContentFormat {
@@ -136,7 +181,7 @@ impl<'de> Deserialize<'de> for ContentFormat {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct FieldKV {
-    name: ContentFormat,
+    key: ContentFormat,
     value: ContentFormat,
 }
 
