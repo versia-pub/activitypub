@@ -28,7 +28,7 @@ use tokio::signal;
 use tracing::{info, instrument::WithSubscriber};
 use url::Url;
 
-use crate::utils::generate_object_id;
+use crate::utils::generate_random_object_id;
 use crate::{
     activities::create_post::CreatePost,
     database::{Config, State},
@@ -84,7 +84,8 @@ async fn post_manually(
         href: Url::parse(&target.id)?,
         kind: Default::default(),
     };
-    let id: ObjectId<post::Model> = generate_object_id(data.domain())?.into();
+    // TODO change
+    let id: ObjectId<post::Model> = generate_random_object_id(data.domain())?.into();
     let note = Note {
         kind: Default::default(),
         id,
@@ -152,10 +153,6 @@ static FEDERATION_CONFIG: OnceLock<FederationConfig<State>> = OnceLock::new();
 #[actix_web::main]
 async fn main() -> actix_web::Result<(), anyhow::Error> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-
-    //TODO remove this
-    lysand::test::main().await?;
-    return Ok(());
 
     let ap_id = Url::parse(&format!(
         "https://{}/{}",
@@ -245,6 +242,10 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     .shutdown_timeout(20)
     .keep_alive(KeepAlive::Os)
     .run();
+
+    //TODO remove this
+    lysand::test::main().await?;
+    return Ok(());
 
     tokio::spawn(http_server);
 

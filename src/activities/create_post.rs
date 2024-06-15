@@ -6,7 +6,7 @@ use crate::{
         person::DbUser,
         post::{DbPost, Note},
     },
-    utils::generate_object_id,
+    utils::generate_random_object_id,
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
@@ -39,7 +39,7 @@ impl CreatePost {
             to: note.to.clone(),
             object: note,
             kind: CreateType::Create,
-            id: generate_object_id(data.domain())?,
+            id: generate_random_object_id(data.domain())?,
         };
         let create_with_context = WithContext::new_default(create);
         let sends = SendActivityTask::prepare(

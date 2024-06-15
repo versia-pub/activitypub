@@ -14,7 +14,7 @@ use crate::{
     database::StateHandle,
     entities::{follow_relation, post, user},
     error,
-    utils::{generate_follow_accept_id, generate_object_id},
+    utils::{generate_follow_accept_id, generate_random_object_id},
     DB,
 };
 
@@ -39,7 +39,7 @@ impl Follow {
             actor: local_user.clone(),
             object: followee.clone(),
             kind: FollowType::Follow,
-            id: generate_object_id(data.domain())?,
+            id: generate_random_object_id(data.domain())?,
         };
         let create_with_context = WithContext::new_default(create);
         let sends = SendActivityTask::prepare(
