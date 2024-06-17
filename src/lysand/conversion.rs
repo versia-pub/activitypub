@@ -35,9 +35,8 @@ pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model>
         Ok(post)
     } else {
         let post = fetch_note_from_url(url.clone()).await?;
-        receive_lysand_note(post, "https://ap.lysand.org/example".to_string()).await?;
-        let post_res: Option<post::Model> = prelude::Post::find().filter(entities::post::Column::Url.eq(str_url)).one(DB.get().unwrap()).await?;
-        Ok(post_res.unwrap())
+        let res = receive_lysand_note(post, "https://ap.lysand.org/example".to_string()).await?;
+        Ok(res)
     }
 }
 
@@ -82,7 +81,7 @@ pub async fn fetch_note_from_url(url: Url) -> anyhow::Result<super::objects::Not
     Ok(request.json::<super::objects::Note>().await?)
 }
 #[async_recursion]
-pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<crate::objects::post::Note> {
+pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<entities::post::Model> {
     let lysand_author: entities::user::Model = db_user_from_url(note.author.clone()).await?;
     let user_res = prelude::User::find_by_id(db_id).one(DB.get().unwrap()).await;
     if user_res.is_err() {
@@ -195,8 +194,8 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
             spoiler_text: Set(note.subject),
             ..Default::default()
         };
-        post.insert(DB.get().unwrap()).await?;
-        Ok(ap_note)
+        let res = post.insert(DB.get().unwrap()).await?;
+        Ok(res)
     } else {
         Err(anyhow!("User not found"))
     }
