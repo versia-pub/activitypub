@@ -47,8 +47,6 @@ pub async fn main() -> anyhow::Result<()> {
     for item in outbox.items {
         let ap_item = super::conversion::receive_lysand_note(item, "https://ap.lysand.org/example".to_string()).await?;
         println!("{:#?}", ap_item);
-        let ap_json = serde_json::to_string_pretty(&SortAlphabetically(&ap_item))?;
-        println!("{}", ap_json);
     }
 
     Ok(())
