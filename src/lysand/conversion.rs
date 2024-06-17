@@ -35,7 +35,7 @@ pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model>
         Ok(post)
     } else {
         let post = fetch_note_from_url(url.clone()).await?;
-        receive_lysand_note(post, "1".to_string()).await?;
+        receive_lysand_note(post, "example".to_string()).await?;
         let post_res: Option<post::Model> = prelude::Post::find().filter(entities::post::Column::Url.eq(str_url)).one(DB.get().unwrap()).await?;
         Ok(post_res.unwrap())
     }
