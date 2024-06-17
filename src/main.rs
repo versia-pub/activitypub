@@ -245,10 +245,6 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     .keep_alive(KeepAlive::Os)
     .run();
 
-    //TODO remove this
-    lysand::test::main().await?;
-    return Ok(());
-
     tokio::spawn(http_server);
 
     match signal::ctrl_c().await {
