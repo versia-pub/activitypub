@@ -1,5 +1,3 @@
-use std::os::linux::raw::stat;
-
 use activitypub_federation::{traits::Object, FEDERATION_CONTENT_TYPE};
 use actix_web::{get, web, HttpResponse};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
