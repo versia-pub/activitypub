@@ -131,25 +131,13 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<en
         } else {
             None
         };
-        let reply_string: Option<String> = if let Some(rep) = note.replies_to.clone() {
-            let note = fetch_note_from_url(rep).await?;
-            let fake_rep_url = Url::parse(&format!(
-                "https://{}/apbridge/object/{}",
-                API_DOMAIN.to_string(),
-                &note.id.to_string()
-            ))?;
-            Some(fake_rep_url.into())
+        let reply_uuid: Option<String> = if let Some(rep) = note.replies_to.clone() {
+            Some(db_post_from_url(rep).await?.id)
         } else {
             None
         };
-        let quote_string: Option<String> = if let Some(rep) = note.quotes.clone() {
-            let note = fetch_note_from_url(rep).await?;
-            let fake_rep_url = Url::parse(&format!(
-                "https://{}/apbridge/object/{}",
-                API_DOMAIN.to_string(),
-                &note.id.to_string()
-            ))?;
-            Some(fake_rep_url.into())
+        let quote_uuid: Option<String> = if let Some(rep) = note.quotes.clone() {
+            Some(db_post_from_url(rep).await?.id)
         } else {
             None
         };
@@ -189,8 +177,8 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<en
             visibility: Set(visibility.to_string()),
             title: Set(note.subject.clone()),
             url: Set(ap_note.id.to_string()),
-            reply_id: Set(reply_string),
-            quoting_id: Set(quote_string),
+            reply_id: Set(reply_uuid),
+            quoting_id: Set(quote_uuid),
             spoiler_text: Set(note.subject),
             ..Default::default()
         };
