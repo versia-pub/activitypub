@@ -176,7 +176,7 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<en
             content_type: Set("Note".to_string()),
             visibility: Set(visibility.to_string()),
             title: Set(note.subject.clone()),
-            url: Set(ap_note.id.to_string()),
+            url: Set(note.uri.clone().to_string()),
             reply_id: Set(reply_uuid),
             quoting_id: Set(quote_uuid),
             spoiler_text: Set(note.subject),
