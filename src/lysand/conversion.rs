@@ -4,6 +4,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use anyhow::{anyhow, Ok};
 use url::Url;
+use async_recursion::async_recursion;
 
 use crate::{database::State, entities::{self, post, prelude, user}, objects::post::Mention, utils::{generate_object_id, generate_user_id}, API_DOMAIN, DB, FEDERATION_CONFIG, LYSAND_DOMAIN};
 
@@ -22,7 +23,7 @@ pub async fn option_content_format_text(opt: Option<ContentFormat>) -> Option<St
 
     None
 }
-
+#[async_recursion]
 pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model> {
     if !url.domain().eq(&Some(LYSAND_DOMAIN.as_str())) {
         return Err(anyhow!("not lysands domain"));
@@ -80,7 +81,7 @@ pub async fn fetch_note_from_url(url: Url) -> anyhow::Result<super::objects::Not
     let request = req_client.get(url).send().await?;
     Ok(request.json::<super::objects::Note>().await?)
 }
-
+#[async_recursion]
 pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<crate::objects::post::Note> {
     let lysand_author: entities::user::Model = db_user_from_url(note.author.clone()).await?;
     let user_res = prelude::User::find_by_id(db_id).one(DB.get().unwrap()).await;
@@ -131,7 +132,7 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
         } else {
             None
         };
-        let reply_string: Option<String> = if let Some(rep) = note.replies_to {
+        let reply_string: Option<String> = if let Some(rep) = note.replies_to.clone() {
             let note = fetch_note_from_url(rep).await?;
             let fake_rep_url = Url::parse(&format!(
                 "https://{}/apbridge/object/{}",
