@@ -6,3 +6,4 @@
 .direnv
 migration/target
 db.sqlite
+.env

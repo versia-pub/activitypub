@@ -76,6 +76,7 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
         let id: ObjectId<post::Model> = generate_object_id(data.domain(), &note.id.to_string())?.into();
         let user_id = generate_user_id(data.domain(), &target.id.to_string())?;
         let user = fetch_user_from_url(note.author.clone()).await?;
+        let data = FEDERATION_CONFIG.get().unwrap();
         let mut tag: Vec<Mention> = Vec::new();
         for l_tag in note.mentions.clone().unwrap_or_default() {
             tag.push(Mention { href: l_tag, //TODO convert to ap url
@@ -94,7 +95,18 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
         let reply: Option<ObjectId<entities::post::Model>> = if let Some(rep) = note.replies_to.clone() {
             let note = fetch_note_from_url(rep).await?;
             let fake_rep_url = Url::parse(&format!(
-                "https://{}/lysand/apnote/{}",
+                "https://{}/apbridge/object/{}",
+                API_DOMAIN.to_string(),
+                &note.id.to_string()
+            ))?;
+            Some(fake_rep_url.into())
+        } else {
+            None
+        };
+        let quote: Option<ObjectId<entities::post::Model>> = if let Some(rep) = note.quotes.clone() {
+            let note = fetch_note_from_url(rep).await?;
+            let fake_rep_url = Url::parse(&format!(
+                "https://{}/apbridge/object/{}",
                 API_DOMAIN.to_string(),
                 &note.id.to_string()
             ))?;
@@ -105,7 +117,7 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
         let reply_string: Option<String> = if let Some(rep) = note.replies_to {
             let note = fetch_note_from_url(rep).await?;
             let fake_rep_url = Url::parse(&format!(
-                "https://{}/lysand/apnote/{}",
+                "https://{}/apbridge/object/{}",
                 API_DOMAIN.to_string(),
                 &note.id.to_string()
             ))?;
@@ -116,7 +128,7 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
         let quote_string: Option<String> = if let Some(rep) = note.quotes.clone() {
             let note = fetch_note_from_url(rep).await?;
             let fake_rep_url = Url::parse(&format!(
-                "https://{}/lysand/apnote/{}",
+                "https://{}/apbridge/object/{}",
                 API_DOMAIN.to_string(),
                 &note.id.to_string()
             ))?;
@@ -133,7 +145,7 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
             tag,
             attributed_to: Url::parse(user.uri.clone().as_str()).unwrap().into(),
             content: option_content_format_text(note.content).await.unwrap_or_default(),
-            in_reply_to: reply
+            in_reply_to: reply.clone()
         };
 
         let visibility = match note.visibility.clone().unwrap_or(super::objects::VisibilityType::Public) {
@@ -142,7 +154,12 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
             super::objects::VisibilityType::Direct => "direct",
             super::objects::VisibilityType::Unlisted => "unlisted",
         };
-
+        if let Some(obj) = quote {
+            println!("Quoting: {}", obj.dereference(&data.to_request_data()).await.unwrap().url);
+        }
+        if let Some(obj) = reply {
+            println!("Replying to: {}", obj.dereference(&data.to_request_data()).await.unwrap().url);
+        }
         let post = entities::post::ActiveModel {
             id: Set(note.id.to_string()),
             creator: Set(lysand_author.id.clone()),

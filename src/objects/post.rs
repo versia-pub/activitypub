@@ -58,7 +58,7 @@ impl Object for post::Model {
         let post = crate::entities::prelude::Post::find()
         .filter(post::Column::Id.eq(object_id.to_string()))
         .one(data.app_data().database_connection.clone().as_ref()).await;
-        Ok(None)
+        Ok(post.unwrap())
     }
 
     async fn into_json(self, _data: &Data<Self::DataType>) -> Result<Self::Kind, Self::Error> {

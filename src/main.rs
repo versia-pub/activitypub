@@ -36,6 +36,7 @@ use crate::{
 };
 use crate::{activities::follow::Follow, entities::user};
 use lazy_static::lazy_static;
+use dotenv::dotenv;
 
 mod activities;
 mod database;
@@ -152,6 +153,7 @@ static FEDERATION_CONFIG: OnceLock<FederationConfig<State>> = OnceLock::new();
 
 #[actix_web::main]
 async fn main() -> actix_web::Result<(), anyhow::Error> {
+    dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let ap_id = Url::parse(&format!(
