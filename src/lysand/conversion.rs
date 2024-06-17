@@ -172,11 +172,11 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
             super::objects::VisibilityType::Direct => "direct",
             super::objects::VisibilityType::Unlisted => "unlisted",
         };
-        if let Some(obj) = quote {
-            println!("Quoting: {}", db_post_from_url(note.replies_to.unwrap()).await?.url);
+        if let Some(obj) = note.replies_to {
+            println!("Quoting: {}", db_post_from_url(obj).await?.url);
         }
-        if let Some(obj) = reply {
-            println!("Replying to: {}", db_post_from_url(note.quotes.unwrap()).await?.url);
+        if let Some(obj) = note.quotes {
+            println!("Replying to: {}", db_post_from_url(obj).await?.url);
         }
         let post = entities::post::ActiveModel {
             id: Set(note.id.to_string()),
