@@ -23,6 +23,23 @@ pub async fn option_content_format_text(opt: Option<ContentFormat>) -> Option<St
     None
 }
 
+pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model> {
+    if !url.domain().eq(&Some(LYSAND_DOMAIN.as_str())) {
+        return Err(anyhow!("not lysands domain"));
+    }
+    let str_url = url.to_string();
+    let post_res: Option<post::Model> = prelude::Post::find().filter(entities::post::Column::Url.eq(str_url.clone())).one(DB.get().unwrap()).await?;
+
+    if let Some(post) = post_res {
+        Ok(post)
+    } else {
+        let post = fetch_note_from_url(url.clone()).await?;
+        receive_lysand_note(post, "1".to_string()).await?;
+        let post_res: Option<post::Model> = prelude::Post::find().filter(entities::post::Column::Url.eq(str_url)).one(DB.get().unwrap()).await?;
+        Ok(post_res.unwrap())
+    }
+}
+
 pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model> {
     if !url.domain().eq(&Some(LYSAND_DOMAIN.as_str())) {
         return Err(anyhow!("not lysands domain"));
@@ -155,10 +172,10 @@ pub async fn receive_lysand_note(note: Note, db_id: String) -> anyhow::Result<cr
             super::objects::VisibilityType::Unlisted => "unlisted",
         };
         if let Some(obj) = quote {
-            println!("Quoting: {}", obj.dereference(&data.to_request_data()).await.unwrap().url);
+            println!("Quoting: {}", db_post_from_url(note.replies_to.unwrap()).await?.url);
         }
         if let Some(obj) = reply {
-            println!("Replying to: {}", obj.dereference(&data.to_request_data()).await.unwrap().url);
+            println!("Replying to: {}", db_post_from_url(note.quotes.unwrap()).await?.url);
         }
         let post = entities::post::ActiveModel {
             id: Set(note.id.to_string()),
