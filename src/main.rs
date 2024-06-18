@@ -28,13 +28,14 @@ use tokio::signal;
 use tracing::{info, instrument::WithSubscriber};
 use url::Url;
 
-use crate::utils::generate_object_id;
+use crate::utils::generate_random_object_id;
 use crate::{
     activities::create_post::CreatePost,
     database::{Config, State},
     objects::post::{Mention, Note},
 };
 use crate::{activities::follow::Follow, entities::user};
+use dotenv::dotenv;
 use lazy_static::lazy_static;
 
 mod activities;
@@ -76,29 +77,31 @@ async fn post_manually(
 ) -> actix_web::Result<HttpResponse, error::Error> {
     let local_user = state.local_user().await?;
     let data = FEDERATION_CONFIG.get().unwrap();
-    let creator =
+    let target =
         webfinger_resolve_actor::<State, user::Model>(path.0.as_str(), &data.to_request_data())
             .await?;
 
     let mention = Mention {
-        href: Url::parse(&creator.id)?,
+        href: Url::parse(&target.id)?,
         kind: Default::default(),
     };
-    let id: ObjectId<post::Model> = generate_object_id(data.domain())?.into();
+    // TODO change
+    let id: ObjectId<post::Model> = generate_random_object_id(data.domain())?.into();
     let note = Note {
         kind: Default::default(),
         id,
         sensitive: false,
-        attributed_to: Url::parse(&data.local_user().await?.id).unwrap().into(),
+        attributed_to: Url::parse(&local_user.id).unwrap().into(),
         to: vec![public()],
-        content: format!("{} {}", path.1, creator.name),
+        content: format!("{} {}", path.1, target.name),
         tag: vec![mention],
         in_reply_to: None,
+        cc: vec![].into(),
     };
 
     CreatePost::send(
         note,
-        creator.shared_inbox_or_inbox(),
+        target.shared_inbox_or_inbox(),
         &data.to_request_data(),
     )
     .await?;
@@ -131,16 +134,18 @@ async fn follow_manually(
     Ok(HttpResponse::Ok().json(Response { health: true }))
 }
 
-const DOMAIN_DEF: &str = "example.com";
-const LOCAL_USER_NAME: &str = "example";
+const DOMAIN_DEF: &str = "social.lysand.org";
+const LOCAL_USER_NAME: &str = "apservice";
 
 lazy_static! {
-    static ref SERVER_URL: String = env::var("LISTEN").unwrap_or("127.0.0.1:8080".to_string());
+    static ref SERVER_URL: String = env::var("LISTEN").unwrap_or("0.0.0.0:8080".to_string());
     static ref DATABASE_URL: String = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     static ref USERNAME: String =
         env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string());
-    static ref API_DOMAIN: String = env::var("API_DOMAIN").unwrap_or(DOMAIN_DEF.to_string());
-    static ref FEDERATED_DOMAIN: String = env::var("FEDERATED_DOMAIN").unwrap_or(DOMAIN_DEF.to_string());
+    static ref API_DOMAIN: String = env::var("API_DOMAIN").expect("not set API_DOMAIN");
+    static ref LYSAND_DOMAIN: String = env::var("LYSAND_DOMAIN").expect("not set LYSAND_DOMAIN");
+    static ref FEDERATED_DOMAIN: String =
+        env::var("FEDERATED_DOMAIN").unwrap_or(API_DOMAIN.to_string());
 }
 
 static DB: OnceLock<DatabaseConnection> = OnceLock::new();
@@ -148,11 +153,8 @@ static FEDERATION_CONFIG: OnceLock<FederationConfig<State>> = OnceLock::new();
 
 #[actix_web::main]
 async fn main() -> actix_web::Result<(), anyhow::Error> {
+    dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-
-    //TODO remove this
-    //lysand::test::main().await?;
-    //return Ok(());
 
     let ap_id = Url::parse(&format!(
         "https://{}/{}",
@@ -204,7 +206,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     };
 
     let data = FederationConfig::builder()
-        .domain(env::var("FEDERATED_DOMAIN").expect("FEDERATED_DOMAIN must be set"))
+        .domain(FEDERATED_DOMAIN.to_string())
         .app_data(state.clone())
         .http_signature_compat(true)
         .signed_fetch_actor(&state.local_user().await.unwrap())
@@ -214,18 +216,9 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     let _ = FEDERATION_CONFIG.set(data.clone());
 
     let mut labels = HashMap::new();
-    labels.insert(
-        "domain".to_string(),
-        env::var("FEDERATED_DOMAIN")
-            .expect("FEDERATED_DOMAIN must be set")
-            .to_string(),
-    );
-    labels.insert(
-        "name".to_string(),
-        env::var("LOCAL_USER_NAME")
-            .expect("LOCAL_USER_NAME must be set")
-            .to_string(),
-    );
+    labels.insert("domain".to_string(), FEDERATED_DOMAIN.to_string());
+    labels.insert("name".to_string(), USERNAME.to_string());
+    labels.insert("api_domain".to_string(), API_DOMAIN.to_string());
 
     let prometheus = PrometheusMetricsBuilder::new("api")
         .endpoint("/metrics")

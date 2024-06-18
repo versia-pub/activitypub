@@ -15,8 +15,7 @@ pub struct Model {
     pub created_at: chrono::DateTime<Utc>,
     #[sea_orm(column_type = "Timestamp")]
     pub updated_at: Option<chrono::DateTime<Utc>>,
-    #[sea_orm(column_type = "Timestamp")]
-    pub reblog_id: Option<chrono::DateTime<Utc>>,
+    pub reblog_id: Option<String>,
     pub content_type: String,
     pub visibility: String,
     pub reply_id: Option<String>,

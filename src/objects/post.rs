@@ -3,6 +3,7 @@ use crate::{
     database::StateHandle,
     entities::{post, user},
     error::Error,
+    lysand::conversion::db_user_from_url,
     objects::person::DbUser,
     utils::generate_object_id,
 };
@@ -14,7 +15,7 @@ use activitypub_federation::{
     traits::{Actor, Object},
 };
 use activitystreams_kinds::link::MentionType;
-use sea_orm::{ActiveModelTrait, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use url::Url;
@@ -40,6 +41,7 @@ pub struct Note {
     pub(crate) in_reply_to: Option<ObjectId<post::Model>>,
     pub(crate) tag: Vec<Mention>,
     pub(crate) sensitive: bool,
+    pub(crate) cc: Option<Vec<Url>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -56,14 +58,42 @@ impl Object for post::Model {
     type Error = Error;
 
     async fn read_from_id(
-        _object_id: Url,
-        _data: &Data<Self::DataType>,
+        object_id: Url,
+        data: &Data<Self::DataType>,
     ) -> Result<Option<Self>, Self::Error> {
-        Ok(None)
+        let post = crate::entities::prelude::Post::find()
+            .filter(post::Column::Id.eq(object_id.to_string()))
+            .one(data.app_data().database_connection.clone().as_ref())
+            .await;
+        Ok(post.unwrap())
     }
 
     async fn into_json(self, _data: &Data<Self::DataType>) -> Result<Self::Kind, Self::Error> {
-        todo!()
+        let creator = db_user_from_url(Url::parse(self.creator.as_str()).unwrap()).await?;
+        let to = match self.visibility.as_str() {
+            "public" => vec![
+                public(),
+                Url::parse(creator.followers.unwrap().as_str()).unwrap(),
+            ],
+            "followers" => vec![Url::parse(creator.followers.unwrap().as_str()).unwrap()],
+            "direct" => vec![], //TODO: implement this
+            "unlisted" => vec![
+                Url::parse(creator.followers.unwrap().as_str()).unwrap(),
+                public(),
+            ],
+            _ => vec![public()],
+        };
+        Ok(Note {
+            kind: Default::default(),
+            id: Url::parse(self.url.as_str()).unwrap().into(),
+            attributed_to: Url::parse(self.creator.as_str()).unwrap().into(),
+            to: to.clone(),
+            content: self.content,
+            in_reply_to: None,
+            tag: vec![],
+            sensitive: self.sensitive,
+            cc: Some(to),
+        })
     }
 
     async fn verify(

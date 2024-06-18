@@ -13,6 +13,7 @@ use time::{
     OffsetDateTime,
 };
 use url::Url;
+use uuid::Uuid;
 
 const FORMAT: Iso8601<6651332276412969266533270467398074368> = Iso8601::<
     {
@@ -47,6 +48,26 @@ pub enum LysandType {
     Undo,
     Extension,
     ServerMetadata,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum CategoryType {
+    Microblog,
+    Forum,
+    Blog,
+    Image,
+    Video,
+    Audio,
+    Messaging,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum VisibilityType {
+    Public,
+    Unlisted,
+    Followers,
+    Direct,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -88,8 +109,53 @@ pub struct ContentHash {
 }
 
 #[derive(Debug, Clone)]
-struct ContentFormat {
+pub struct ContentFormat {
     x: HashMap<String, ContentEntry>,
+}
+
+impl ContentFormat {
+    pub async fn select_rich_text(&self) -> anyhow::Result<String> {
+        if let Some(entry) = self.x.get("text/x.misskeymarkdown") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("text/html") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("text/markdown") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("text/plain") {
+            return Ok(entry.content.clone());
+        }
+
+        Ok(self.x.clone().values().next().unwrap().content.clone())
+    }
+
+    pub async fn select_rich_img(&self) -> anyhow::Result<String> {
+        if let Some(entry) = self.x.get("image/webp") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("image/png") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("image/avif") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("image/jxl") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("image/jpeg") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("image/gif") {
+            return Ok(entry.content.clone());
+        }
+        if let Some(entry) = self.x.get("image/bmp") {
+            return Ok(entry.content.clone());
+        }
+
+        Ok(self.x.clone().values().next().unwrap().content.clone())
+    }
 }
 
 impl Serialize for ContentFormat {
@@ -135,25 +201,74 @@ pub struct ContentEntry {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct User {
-    public_key: PublicKey,
+    pub public_key: PublicKey,
     #[serde(rename = "type")]
-    rtype: LysandType,
-    id: String,
-    uri: Url,
+    pub rtype: LysandType,
+    pub id: Uuid,
+    pub uri: Url,
     #[serde(with = "iso_lysand")]
-    created_at: OffsetDateTime,
-    display_name: Option<String>,
+    pub created_at: OffsetDateTime,
+    pub display_name: Option<String>,
     // TODO bio: Option<String>,
-    inbox: Url,
-    outbox: Url,
-    featured: Url,
-    followers: Url,
-    following: Url,
-    likes: Url,
-    dislikes: Url,
-    username: String,
-    bio: Option<ContentFormat>,
-    avatar: Option<ContentFormat>,
-    header: Option<ContentFormat>,
-    fields: Option<Vec<FieldKV>>,
+    pub inbox: Url,
+    pub outbox: Url,
+    pub featured: Url,
+    pub followers: Url,
+    pub following: Url,
+    pub likes: Url,
+    pub dislikes: Url,
+    pub username: String,
+    pub bio: Option<ContentFormat>,
+    pub avatar: Option<ContentFormat>,
+    pub header: Option<ContentFormat>,
+    pub fields: Option<Vec<FieldKV>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DeviceInfo {
+    name: String,
+    version: String,
+    url: Url,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LinkPreview {
+    description: String,
+    title: String,
+    link: Url,
+    image: Option<Url>,
+    icon: Option<Url>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Note {
+    #[serde(rename = "type")]
+    pub rtype: LysandType,
+    pub id: Uuid,
+    pub uri: Url,
+    pub author: Url,
+    #[serde(with = "iso_lysand")]
+    pub created_at: OffsetDateTime,
+    pub category: Option<CategoryType>,
+    pub content: Option<ContentFormat>,
+    pub device: Option<DeviceInfo>,
+    pub previews: Option<Vec<LinkPreview>>,
+    pub group: Option<String>,
+    pub attachments: Option<Vec<ContentFormat>>,
+    pub replies_to: Option<Url>,
+    pub quotes: Option<Url>,
+    pub mentions: Option<Vec<Url>>,
+    pub subject: Option<String>,
+    pub is_sensitive: Option<bool>,
+    pub visibility: Option<VisibilityType>,
+    //TODO extensions
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Outbox {
+    pub first: Url,
+    pub last: Url,
+    pub next: Option<Url>,
+    pub prev: Option<Url>,
+    pub items: Vec<Note>,
 }

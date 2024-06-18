@@ -2,7 +2,6 @@
 name = "lysand-ap-layer"
 version = "0.1.0"
 edition = "2021"
-build = "build.rs"
 authors = ["April John <aprl@acab.dev>"]
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/lysand-org/lysand-ap-layer"
@@ -32,6 +31,8 @@ async_once = "0.2.6"
 reqwest = { version = "0.12.4", features = ["blocking", "json", "multipart"] }
 time = { version = "0.3.36", features = ["serde"] }
 serde_derive = "1.0.201"
+dotenv = "0.15.0"
+async-recursion = "1.1.1"
 
 [dependencies.sea-orm]
 version = "0.12.0"
@@ -42,6 +43,15 @@ features = [
   "runtime-tokio-rustls",  # `ASYNC_RUNTIME` feature
   "sqlx-postgres",         # `DATABASE_DRIVER` feature
   "sqlx-sqlite","sqlx-mysql","with-chrono"
+]
+
+[dependencies.uuid]
+version = "1.8.0"
+features = [
+    "v4",
+    "v7",
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "serde",
 ]
 
 [build-dependencies]
