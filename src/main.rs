@@ -135,7 +135,7 @@ async fn follow_manually(
 }
 
 const DOMAIN_DEF: &str = "social.lysand.org";
-const LOCAL_USER_NAME: &str = "example";
+const LOCAL_USER_NAME: &str = "apservice";
 
 lazy_static! {
     static ref SERVER_URL: String = env::var("LISTEN").unwrap_or("0.0.0.0:8080".to_string());
