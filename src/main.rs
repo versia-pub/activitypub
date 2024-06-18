@@ -35,8 +35,8 @@ use crate::{
     objects::post::{Mention, Note},
 };
 use crate::{activities::follow::Follow, entities::user};
-use lazy_static::lazy_static;
 use dotenv::dotenv;
+use lazy_static::lazy_static;
 
 mod activities;
 mod database;
@@ -96,7 +96,7 @@ async fn post_manually(
         content: format!("{} {}", path.1, target.name),
         tag: vec![mention],
         in_reply_to: None,
-        cc: vec![].into()
+        cc: vec![].into(),
     };
 
     CreatePost::send(

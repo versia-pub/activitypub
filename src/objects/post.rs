@@ -1,5 +1,11 @@
 use crate::{
-    activities::create_post::CreatePost, database::StateHandle, entities::{post, user}, error::Error, lysand::conversion::db_user_from_url, objects::person::DbUser, utils::generate_object_id
+    activities::create_post::CreatePost,
+    database::StateHandle,
+    entities::{post, user},
+    error::Error,
+    lysand::conversion::db_user_from_url,
+    objects::person::DbUser,
+    utils::generate_object_id,
 };
 use activitypub_federation::{
     config::Data,
@@ -56,18 +62,25 @@ impl Object for post::Model {
         data: &Data<Self::DataType>,
     ) -> Result<Option<Self>, Self::Error> {
         let post = crate::entities::prelude::Post::find()
-        .filter(post::Column::Id.eq(object_id.to_string()))
-        .one(data.app_data().database_connection.clone().as_ref()).await;
+            .filter(post::Column::Id.eq(object_id.to_string()))
+            .one(data.app_data().database_connection.clone().as_ref())
+            .await;
         Ok(post.unwrap())
     }
 
     async fn into_json(self, _data: &Data<Self::DataType>) -> Result<Self::Kind, Self::Error> {
         let creator = db_user_from_url(Url::parse(self.creator.as_str()).unwrap()).await?;
         let to = match self.visibility.as_str() {
-            "public" => vec![public(), Url::parse(creator.followers.unwrap().as_str()).unwrap()],
+            "public" => vec![
+                public(),
+                Url::parse(creator.followers.unwrap().as_str()).unwrap(),
+            ],
             "followers" => vec![Url::parse(creator.followers.unwrap().as_str()).unwrap()],
             "direct" => vec![], //TODO: implement this
-            "unlisted" => vec![Url::parse(creator.followers.unwrap().as_str()).unwrap(), public()],
+            "unlisted" => vec![
+                Url::parse(creator.followers.unwrap().as_str()).unwrap(),
+                public(),
+            ],
             _ => vec![public()],
         };
         Ok(Note {

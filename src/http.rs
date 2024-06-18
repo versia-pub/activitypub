@@ -1,5 +1,9 @@
 use crate::{
-    database::StateHandle, entities::user, error::Error, lysand::{self, conversion::receive_lysand_note}, objects::person::{DbUser, PersonAcceptedActivities}
+    database::StateHandle,
+    entities::user,
+    error::Error,
+    lysand::{self, conversion::receive_lysand_note},
+    objects::person::{DbUser, PersonAcceptedActivities},
 };
 use activitypub_federation::{
     actix_web::{inbox::receive_activity, signing_actor},
@@ -33,7 +37,11 @@ pub fn listen(config: &FederationConfig<StateHandle>) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn lysand_inbox(note: web::Json<lysand::objects::Note>, id: web::Path<String>, data: Data<StateHandle>) -> Result<HttpResponse, Error> {
+pub fn lysand_inbox(
+    note: web::Json<lysand::objects::Note>,
+    id: web::Path<String>,
+    data: Data<StateHandle>,
+) -> Result<HttpResponse, Error> {
     tokio::spawn(receive_lysand_note(note.into_inner(), id.into_inner()));
     Ok(HttpResponse::Created().finish())
 }

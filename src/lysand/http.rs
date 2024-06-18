@@ -2,7 +2,14 @@ use activitypub_federation::{traits::Object, FEDERATION_CONTENT_TYPE};
 use actix_web::{get, web, HttpResponse};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
-use crate::{database::State, entities::{post::{self, Entity}, prelude}, error, Response, DB, FEDERATION_CONFIG};
+use crate::{
+    database::State,
+    entities::{
+        post::{self, Entity},
+        prelude,
+    },
+    error, Response, DB, FEDERATION_CONFIG,
+};
 
 #[get("/apbridge/object/{post}")]
 async fn fetch_post(
@@ -21,5 +28,10 @@ async fn fetch_post(
         None => return Ok(HttpResponse::NotFound().finish()),
     };
 
-    Ok(HttpResponse::Ok().content_type(FEDERATION_CONTENT_TYPE).json(post.into_json(&FEDERATION_CONFIG.get().unwrap().to_request_data()).await?))
+    Ok(HttpResponse::Ok()
+        .content_type(FEDERATION_CONTENT_TYPE)
+        .json(
+            post.into_json(&FEDERATION_CONFIG.get().unwrap().to_request_data())
+                .await?,
+        ))
 }

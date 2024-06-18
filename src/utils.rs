@@ -17,5 +17,8 @@ pub fn generate_random_object_id(domain: &str) -> Result<Url, ParseError> {
 
 /// Generate a follow accept id
 pub fn generate_follow_accept_id(domain: &str, db_id: i32) -> Result<Url, ParseError> {
-    Url::parse(&format!("https://{}/apbridge/activity/follow/{}", domain, db_id))
+    Url::parse(&format!(
+        "https://{}/apbridge/activity/follow/{}",
+        domain, db_id
+    ))
 }
