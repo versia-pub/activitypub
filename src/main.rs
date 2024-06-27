@@ -19,6 +19,7 @@ use lysand::http::{create_activity, fetch_post};
 use objects::person::DbUser;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};
+use utils::generate_object_id;
 use std::{
     collections::HashMap,
     env,
@@ -87,7 +88,8 @@ async fn post_manually(
         kind: Default::default(),
     };
     // TODO change
-    let id: ObjectId<post::Model> = generate_random_object_id(data.domain())?.into();
+    let uuid = uuid::Uuid::now_v7().to_string();
+    let id: ObjectId<post::Model> = generate_object_id(data.domain(), &uuid)?.into();
     let note = Note {
         kind: Default::default(),
         id: id.clone(),
@@ -101,7 +103,7 @@ async fn post_manually(
     };
 
     let post = entities::post::ActiveModel {
-        id: Set(uuid::Uuid::now_v7().to_string()),
+        id: Set(uuid),
         creator: Set(local_user.id.clone()),
         content: Set(note.content.clone()),
         sensitive: Set(false),
