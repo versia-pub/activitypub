@@ -35,9 +35,7 @@ async fn fetch_post(
 
     Ok(HttpResponse::Ok()
         .content_type(FEDERATION_CONTENT_TYPE)
-        .json(
-            crate::objects::post::Note::from_db(&post)
-        ))
+        .json(crate::objects::post::Note::from_db(&post)))
 }
 
 #[get("/apbridge/create/{id}/{base64url}")]
