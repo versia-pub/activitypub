@@ -126,20 +126,32 @@ pub async fn receive_lysand_note(
                 kind: Default::default(),
             })
         }
+        let mut mentions = Vec::new();
+        for obj in tag.clone() {
+            mentions.push(obj.href.clone());
+        }
         let to = match note
             .visibility
             .clone()
             .unwrap_or(super::objects::VisibilityType::Public)
         {
             super::objects::VisibilityType::Public => {
-                vec![public(), Url::parse(&user.followers.to_string().as_str())?]
+                let mut vec = vec![public(), Url::parse(&user.followers.to_string().as_str())?];
+                vec.append(&mut mentions.clone());
+                vec
             }
             super::objects::VisibilityType::Followers => {
-                vec![Url::parse(&user.followers.to_string().as_str())?]
+                let mut vec = vec![Url::parse(&user.followers.to_string().as_str())?];
+                vec.append(&mut mentions.clone());
+                vec
             }
-            super::objects::VisibilityType::Direct => note.mentions.unwrap_or_default(),
+            super::objects::VisibilityType::Direct => {
+                mentions.clone()
+            },
             super::objects::VisibilityType::Unlisted => {
-                vec![Url::parse(&user.followers.to_string().as_str())?]
+                let mut vec = vec![Url::parse(&user.followers.to_string().as_str())?];
+                vec.append(&mut mentions.clone());
+                vec
             }
         };
         let cc = match note
