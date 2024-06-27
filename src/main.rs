@@ -30,7 +30,6 @@ use tokio::signal;
 use tracing::{info, instrument::WithSubscriber};
 use url::Url;
 
-use crate::utils::generate_random_object_id;
 use crate::{
     activities::create_post::CreatePost,
     database::{Config, State},
