@@ -24,6 +24,7 @@ pub struct Model {
     pub spoiler_text: Option<String>,
     pub creator: String,
     pub url: String,
+    pub ap_json: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -33,6 +33,7 @@ time = { version = "0.3.36", features = ["serde"] }
 serde_derive = "1.0.201"
 dotenv = "0.15.0"
 async-recursion = "1.1.1"
+base64-url = "3.0.0"
 
 [dependencies.sea-orm]
 version = "0.12.0"

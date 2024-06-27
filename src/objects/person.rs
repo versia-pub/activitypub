@@ -176,4 +176,9 @@ impl Actor for user::Model {
     fn inbox(&self) -> Url {
         Url::parse(&self.inbox).unwrap()
     }
+
+    //TODO: Differenciate shared inbox
+    fn shared_inbox(&self) -> Option<Url> {
+        None
+    }
 }

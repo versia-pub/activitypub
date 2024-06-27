@@ -6,7 +6,7 @@ use crate::{
         person::DbUser,
         post::{DbPost, Note},
     },
-    utils::generate_random_object_id,
+    utils::{base_url_encode, generate_create_id, generate_random_object_id},
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
@@ -32,14 +32,20 @@ pub struct CreatePost {
 }
 
 impl CreatePost {
-    pub async fn send(note: Note, inbox: Url, data: &Data<StateHandle>) -> Result<(), Error> {
+    pub async fn send(
+        note: Note,
+        db_entry: post::Model,
+        inbox: Url,
+        data: &Data<StateHandle>,
+    ) -> Result<(), Error> {
         print!("Sending reply to {}", &note.attributed_to);
+        let encoded_url = base_url_encode(&note.id.clone().into());
         let create = CreatePost {
             actor: note.attributed_to.clone(),
             to: note.to.clone(),
             object: note,
             kind: CreateType::Create,
-            id: generate_random_object_id(data.domain())?,
+            id: generate_create_id(data.domain(), &db_entry.id, &encoded_url)?,
         };
         let create_with_context = WithContext::new_default(create);
         let sends = SendActivityTask::prepare(
