@@ -36,8 +36,7 @@ async fn fetch_post(
     Ok(HttpResponse::Ok()
         .content_type(FEDERATION_CONTENT_TYPE)
         .json(
-            post.into_json(&FEDERATION_CONFIG.get().unwrap().to_request_data())
-                .await?,
+            crate::objects::post::Note::from_db(&post)
         ))
 }
 
