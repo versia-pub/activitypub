@@ -4,6 +4,7 @@ mod m20220101_000001_post_table;
 mod m20240417_230111_user_table;
 mod m20240417_233430_post_user_keys;
 mod m20240505_002524_user_follow_relation;
+mod m20240626_030922_store_ap_json_in_posts;
 
 pub struct Migrator;
 
@@ -15,6 +16,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20240417_230111_user_table::Migration),
             Box::new(m20240417_233430_post_user_keys::Migration),
             Box::new(m20240505_002524_user_follow_relation::Migration),
+            Box::new(m20240626_030922_store_ap_json_in_posts::Migration),
         ]
     }
 }

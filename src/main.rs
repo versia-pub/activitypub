@@ -15,6 +15,7 @@ use clap::Parser;
 use database::Database;
 use entities::post;
 use http::{http_get_user, http_post_user_inbox, webfinger};
+use lysand::http::{create_activity, fetch_post};
 use objects::person::DbUser;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};
@@ -89,7 +90,7 @@ async fn post_manually(
     let id: ObjectId<post::Model> = generate_random_object_id(data.domain())?.into();
     let note = Note {
         kind: Default::default(),
-        id,
+        id: id.clone(),
         sensitive: false,
         attributed_to: Url::parse(&local_user.id).unwrap().into(),
         to: vec![public()],
@@ -99,8 +100,26 @@ async fn post_manually(
         cc: vec![].into(),
     };
 
+    let post = entities::post::ActiveModel {
+        id: Set(uuid::Uuid::now_v7().to_string()),
+        creator: Set(local_user.id.clone()),
+        content: Set(note.content.clone()),
+        sensitive: Set(false),
+        created_at: Set(Utc::now()),
+        local: Set(true),
+        updated_at: Set(Some(Utc::now())),
+        content_type: Set("Note".to_string()),
+        visibility: Set("public".to_string()),
+        url: Set(id.to_string()),
+        ap_json: Set(Some(serde_json::to_string(&note).unwrap())),
+        ..Default::default()
+    };
+
+    let post = post.insert(DB.get().unwrap()).await?;
+
     CreatePost::send(
         note,
+        post,
         target.shared_inbox_or_inbox(),
         &data.to_request_data(),
     )
@@ -238,6 +257,8 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             .route("/{user}/inbox", web::post().to(http_post_user_inbox))
             .route("/.well-known/webfinger", web::get().to(webfinger))
             .service(index)
+            .service(fetch_post)
+            .service(create_activity)
     })
     .bind(SERVER_URL.to_string())?
     .workers(num_cpus::get())

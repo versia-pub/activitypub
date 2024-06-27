@@ -44,6 +44,12 @@ pub struct Note {
     pub(crate) cc: Option<Vec<Url>>,
 }
 
+impl Note {
+    pub fn from_db(post: &post::Model) -> Self {
+        serde_json::from_str(&post.ap_json.as_ref().unwrap()).unwrap()
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Mention {
     pub href: Url,

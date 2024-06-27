@@ -77,7 +77,7 @@ impl Accept {
             actor: follow_req.object.clone(),
             object: follow_req,
             kind: AcceptType::Accept,
-            id: generate_follow_accept_id(data.domain(), follow_relation.id)?,
+            id: generate_follow_accept_id(data.domain(), follow_relation.id.to_string().as_str())?,
         };
         let create_with_context = WithContext::new_default(create);
         let sends = SendActivityTask::prepare(

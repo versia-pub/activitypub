@@ -229,6 +229,7 @@ pub async fn receive_lysand_note(
             reply_id: Set(reply_uuid),
             quoting_id: Set(quote_uuid),
             spoiler_text: Set(note.subject),
+            ap_json: Set(Some(serde_json::to_string(&ap_note).unwrap())),
             ..Default::default()
         };
         let res = post.insert(DB.get().unwrap()).await?;
