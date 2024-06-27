@@ -94,7 +94,7 @@ async fn post_manually(
         id: id.clone(),
         sensitive: false,
         attributed_to: Url::parse(&local_user.id).unwrap().into(),
-        to: vec![public()],
+        to: vec![public(), mention.href.clone()],
         content: format!("{} {}", path.1, target.name),
         tag: vec![mention],
         in_reply_to: None,
