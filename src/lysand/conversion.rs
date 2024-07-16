@@ -32,7 +32,11 @@ pub async fn lysand_post_from_db(
     let data = FEDERATION_CONFIG.get().unwrap();
     let domain = data.domain();
     let url = generate_lysand_post_url(domain, &post.id)?;
-    let author = Url::parse(&post.creator.to_string())?;
+    let creator = prelude::User::find()
+        .filter(entities::user::Column::Id.eq(post.creator.clone()))
+        .one(DB.get().unwrap())
+        .await?;
+    let author = Url::parse(&creator.unwrap().url)?;
     let visibility = match post.visibility.as_str() {
         "public" => super::objects::VisibilityType::Public,
         "followers" => super::objects::VisibilityType::Followers,
