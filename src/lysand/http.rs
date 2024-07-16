@@ -77,9 +77,18 @@ async fn query_post(
             .json(lysand_user));
     }
 
-    let target = ObjectId::<post::Model>::from(query.url.clone().unwrap())
-        .dereference(&data.to_request_data())
-        .await?;
+    let opt_model = prelude::Post::find()
+            .filter(post::Column::Url.eq(query.url.clone().unwrap().as_str()))
+            .one(db)
+            .await?;
+        let target;
+        if let Some(model) = opt_model {
+            target = model;
+        } else {
+            target = ObjectId::<post::Model>::from(Url::parse(query.url.clone().unwrap().as_str())?)
+                .dereference(&data.to_request_data())
+                .await?;
+        }
 
     Ok(HttpResponse::Ok()
         .content_type("application/json")
