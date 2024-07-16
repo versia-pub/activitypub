@@ -96,8 +96,8 @@ pub enum LysandExtensions {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PublicKey {
-    public_key: String,
-    actor: Url,
+    pub public_key: String,
+    pub actor: Url,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -108,9 +108,9 @@ pub struct ContentHash {
     sha512: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ContentFormat {
-    x: HashMap<String, ContentEntry>,
+    pub x: HashMap<String, ContentEntry>,
 }
 
 impl ContentFormat {
@@ -181,7 +181,7 @@ impl<'de> Deserialize<'de> for ContentFormat {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct FieldKV {
+pub struct FieldKV {
     key: ContentFormat,
     value: ContentFormat,
 }
@@ -197,6 +197,21 @@ pub struct ContentEntry {
     width: Option<u64>,
     height: Option<u64>,
     duration: Option<u64>,
+}
+impl ContentEntry {
+    pub fn from_string(string: String) -> ContentEntry {
+        ContentEntry {
+            content: string,
+            description: None,
+            size: None,
+            hash: None,
+            blurhash: None,
+            fps: None,
+            width: None,
+            height: None,
+            duration: None,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

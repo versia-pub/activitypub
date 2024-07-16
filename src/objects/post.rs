@@ -19,6 +19,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use url::Url;
+use uuid::Uuid;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DbPost {
@@ -119,7 +120,7 @@ impl Object for post::Model {
         let creator = json.attributed_to.dereference(data).await?;
         let post: post::ActiveModel = post::ActiveModel {
             content: Set(json.content.clone()),
-            id: Set(json.id.to_string()),
+            id: Set(Uuid::now_v7().to_string()),
             creator: Set(creator.id.to_string()),
             created_at: Set(chrono::Utc::now()), //TODO: make this use the real timestamp
             content_type: Set("text/plain".to_string()), // TODO: make this use the real content type

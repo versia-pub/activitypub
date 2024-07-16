@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use tracing::info;
 use url::Url;
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct DbUser {
@@ -135,7 +136,7 @@ impl Object for user::Model {
             return Ok(user);
         }
         let model = user::ActiveModel {
-            id: Set(json.id.to_string()),
+            id: Set(Uuid::now_v7().to_string()),
             username: Set(json.preferred_username),
             name: Set(json.name),
             inbox: Set(json.inbox.to_string()),
