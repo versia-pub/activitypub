@@ -58,9 +58,18 @@ async fn query_post(
     }
 
     if let Some(user) = query.user_url.clone() {
-        let target = ObjectId::<user::Model>::from(user)
-            .dereference(&data.to_request_data())
+        let opt_model = prelude::User::find()
+            .filter(user::Column::Url.eq(user.as_str()))
+            .one(db)
             .await?;
+        let target;
+        if let Some(model) = opt_model {
+            target = model;
+        } else {
+            target = ObjectId::<user::Model>::from(user)
+                .dereference(&data.to_request_data())
+                .await?;
+        }
         let lysand_user = lysand_user_from_db(target).await?;
 
         return Ok(HttpResponse::Ok()

@@ -143,7 +143,7 @@ impl Object for user::Model {
             public_key: Set(json.public_key.public_key_pem),
             local: Set(false),
             summary: Set(json.summary),
-            url: Set(json.url.to_string()),
+            url: Set(json.id.to_string()),
             follower_count: Set(0),
             following_count: Set(0),
             created_at: Set(Utc::now()),

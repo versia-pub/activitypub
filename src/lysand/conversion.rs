@@ -110,7 +110,7 @@ pub async fn lysand_user_from_db(
     );
     let user = super::objects::User {
         rtype: super::objects::LysandType::User,
-        id: uuid::Uuid::parse_str(&user.id)?,
+        id: uuid::Uuid::try_parse(&user.id)?,
         uri: url.clone(),
         username: user.username,
         display_name,
@@ -129,7 +129,8 @@ pub async fn lysand_user_from_db(
         created_at: OffsetDateTime::from_unix_timestamp(user.created_at.timestamp()).unwrap(),
         public_key: PublicKey {
             actor: url.clone(),
-            public_key: "AAAAC3NzaC1lZDI1NTE5AAAAIMxsX+lEWkHZt9NOvn9yYFP0Z++186LY4b97C4mwj/f2".to_string(), // dummy key
+            public_key: "AAAAC3NzaC1lZDI1NTE5AAAAIMxsX+lEWkHZt9NOvn9yYFP0Z++186LY4b97C4mwj/f2"
+                .to_string(), // dummy key
         },
     };
     Ok(user)
