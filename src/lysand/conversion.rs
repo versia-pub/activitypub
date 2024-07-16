@@ -305,7 +305,7 @@ pub async fn receive_lysand_note(
         let ap_note = crate::objects::post::Note {
             kind: Default::default(),
             id,
-            sensitive: note.is_sensitive.unwrap_or(false),
+            sensitive: Some(note.is_sensitive.unwrap_or(false)),
             cc,
             to,
             tag,
@@ -336,7 +336,7 @@ pub async fn receive_lysand_note(
             id: Set(note.id.to_string()),
             creator: Set(lysand_author.id.clone()),
             content: Set(ap_note.content.clone()),
-            sensitive: Set(ap_note.sensitive),
+            sensitive: Set(ap_note.sensitive.unwrap_or_default()),
             created_at: Set(Utc
                 .timestamp_micros(note.created_at.unix_timestamp())
                 .unwrap()),

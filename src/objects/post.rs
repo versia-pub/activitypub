@@ -41,7 +41,7 @@ pub struct Note {
     pub(crate) content: String,
     pub(crate) in_reply_to: Option<ObjectId<post::Model>>,
     pub(crate) tag: Vec<Mention>,
-    pub(crate) sensitive: bool,
+    pub(crate) sensitive: Option<bool>,
     pub(crate) cc: Option<Vec<Url>>,
 }
 
@@ -98,7 +98,7 @@ impl Object for post::Model {
             content: self.content,
             in_reply_to: None,
             tag: vec![],
-            sensitive: self.sensitive,
+            sensitive: Some(self.sensitive),
             cc: Some(to),
         })
     }
@@ -126,7 +126,7 @@ impl Object for post::Model {
             content_type: Set("text/plain".to_string()), // TODO: make this use the real content type
             local: Set(false),
             visibility: Set("public".to_string()), // TODO: make this use the real visibility
-            sensitive: Set(json.sensitive.clone()),
+            sensitive: Set(json.sensitive.clone().unwrap_or_default()),
             url: Set(json.id.clone().to_string()),
             ..Default::default()
         };

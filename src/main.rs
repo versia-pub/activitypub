@@ -92,7 +92,7 @@ async fn post_manually(
     let note = Note {
         kind: Default::default(),
         id: id.clone(),
-        sensitive: false,
+        sensitive: Some(false),
         attributed_to: Url::parse(&local_user.id).unwrap().into(),
         to: vec![public(), mention.href.clone()],
         content: format!("{} {}", path.1, target.name),
