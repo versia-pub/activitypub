@@ -125,6 +125,7 @@ pub async fn lysand_user_from_db(
         avatar: None,
         header: None,
         fields: None,
+        indexable: false,
         created_at: OffsetDateTime::from_unix_timestamp(user.created_at.timestamp()).unwrap(),
         public_key: PublicKey {
             actor: url.clone(),

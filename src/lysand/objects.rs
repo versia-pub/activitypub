@@ -237,6 +237,7 @@ pub struct User {
     pub avatar: Option<ContentFormat>,
     pub header: Option<ContentFormat>,
     pub fields: Option<Vec<FieldKV>>,
+    pub indexable: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
