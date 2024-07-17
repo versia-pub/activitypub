@@ -168,6 +168,7 @@ pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model>
 }
 
 pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model> {
+    print!("Fetching user from domain: {}", url.domain().unwrap());
     if !url.domain().eq(&Some(LYSAND_DOMAIN.as_str()))
         && !url.domain().eq(&Some(API_DOMAIN.as_str()))
     {
