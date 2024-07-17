@@ -134,20 +134,27 @@ async fn fetch_user(
         None => return Ok(HttpResponse::NotFound().finish()),
     };
 
+    let bridge_user_url = generate_user_id(&API_DOMAIN, &user.id)?;
+    let inbox = Url::parse(&format!(
+        "https://{}/{}/inbox",
+        API_DOMAIN.to_string(),
+        &user.username.clone()
+    ))?;
+
     Ok(HttpResponse::Ok()
         .content_type(FEDERATION_CONTENT_TYPE)
         .json(WithContext::new_default(crate::objects::person::Person {
             kind: Default::default(),
-            id: generate_user_id(&API_DOMAIN, &user.id)?.into(),
+            id: bridge_user_url.clone().into(),
             preferred_username: user.username.clone(),
             name: user.name.clone(),
             summary: user.summary.clone(),
             url: Url::parse(user.url.as_str()).unwrap(),
-            inbox: Url::parse(user.inbox.as_str()).unwrap(),
+            inbox,
             public_key: PublicKey {
-                owner: Url::parse(user.url.as_str()).unwrap(),
+                owner: bridge_user_url.clone(),
                 public_key_pem: user.public_key,
-                id: format!("{}#main-key", Url::parse(user.url.as_str()).unwrap()),
+                id: format!("{}#main-key", bridge_user_url.clone()),
             },
         })))
 }
