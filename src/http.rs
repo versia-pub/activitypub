@@ -4,7 +4,7 @@ use crate::{
     error::Error,
     lysand::{
         self,
-        conversion::{db_user_from_url, receive_lysand_note},
+        conversion::{db_user_from_url, local_db_user_from_name, receive_lysand_note},
     },
     objects::person::{DbUser, PersonAcceptedActivities},
     utils::generate_user_id,
@@ -107,26 +107,7 @@ pub async fn webfinger(
     data: Data<StateHandle>,
 ) -> Result<HttpResponse, Error> {
     let name = extract_webfinger_name(&query.resource, &data)?;
-    let db_user = data.read_user(name.clone()).await;
-    let user;
-    if db_user.is_ok() {
-        user = db_user.unwrap();
-    } else {
-        let res = resolve("acct:".to_string() + name + "@" + &LYSAND_DOMAIN, true)
-            .await
-            .unwrap();
-        user = db_user_from_url(Url::parse(
-            res.links
-                .get(0)
-                .clone()
-                .unwrap()
-                .href
-                .clone()
-                .unwrap()
-                .as_str(),
-        )?)
-        .await?;
-    }
+    let user = local_db_user_from_name(name.to_string()).await?;
     Ok(HttpResponse::Ok().json(build_webfinger_response(
         query.resource.clone(),
         generate_user_id(&API_DOMAIN, &user.id)?,

@@ -4,6 +4,7 @@ use anyhow::{anyhow, Ok};
 use async_recursion::async_recursion;
 use chrono::{DateTime, TimeZone, Utc};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
+use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use url::Url;
 
@@ -164,6 +165,32 @@ pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model>
         let post = fetch_note_from_url(url.clone()).await?;
         let res = receive_lysand_note(post, "https://ap.lysand.org/example".to_string()).await?; // TODO: Replace user id with actual user id
         Ok(res)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ApiUser {
+    uri: Url,
+}
+
+pub async fn local_db_user_from_name(name: String) -> anyhow::Result<entities::user::Model> {
+    let user_res: Option<user::Model> = prelude::User::find()
+        .filter(entities::user::Column::Username.eq(name.clone()))
+        .filter(entities::user::Column::Local.eq(true))
+        .one(DB.get().unwrap())
+        .await?;
+    if let Some(user) = user_res {
+        Ok(user)
+    } else {
+        let client = request_client();
+        let api_url = Url::parse(&format!(
+            "https://{}/api/v1/accounts/id?username={}",
+            LYSAND_DOMAIN.to_string(),
+            name
+        ))?;
+        let request = client.get(api_url).send().await?;
+        let user_json = request.json::<ApiUser>().await?;
+        Ok(db_user_from_url(user_json.uri).await?)
     }
 }
 
