@@ -125,7 +125,7 @@ async fn fetch_user(
     let db = DB.get().unwrap();
 
     let user = prelude::User::find()
-        .filter(post::Column::Id.eq(path.as_str()))
+        .filter(user::Column::Id.eq(path.as_str()))
         .one(db)
         .await?;
 
