@@ -136,7 +136,7 @@ async fn fetch_user(
 
     Ok(HttpResponse::Ok()
         .content_type(FEDERATION_CONTENT_TYPE)
-        .json(crate::objects::person::Person {
+        .json(WithContext::new_default(crate::objects::person::Person {
             kind: Default::default(),
             id: generate_user_id(&API_DOMAIN, &user.id)?.into(),
             preferred_username: user.username.clone(),
@@ -149,7 +149,7 @@ async fn fetch_user(
                 public_key_pem: user.public_key,
                 id: format!("{}#main-key", Url::parse(user.url.as_str()).unwrap()),
             },
-        }))
+        })))
 }
 
 #[get("/apbridge/lysand/object/{post}")]
