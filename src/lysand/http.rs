@@ -1,6 +1,6 @@
 use activitypub_federation::{
     fetch::{object_id::ObjectId, webfinger::webfinger_resolve_actor},
-    protocol::context::WithContext,
+    protocol::{context::WithContext, public_key::PublicKey},
     traits::Object,
     FEDERATION_CONTENT_TYPE,
 };
@@ -18,8 +18,8 @@ use crate::{
     error,
     lysand::conversion::{lysand_post_from_db, lysand_user_from_db},
     objects,
-    utils::{base_url_decode, generate_create_id},
-    Response, DB, FEDERATION_CONFIG,
+    utils::{base_url_decode, generate_create_id, generate_user_id},
+    Response, API_DOMAIN, DB, FEDERATION_CONFIG,
 };
 
 #[derive(serde::Deserialize)]
@@ -78,17 +78,17 @@ async fn query_post(
     }
 
     let opt_model = prelude::Post::find()
-            .filter(post::Column::Url.eq(query.url.clone().unwrap().as_str()))
-            .one(db)
+        .filter(post::Column::Url.eq(query.url.clone().unwrap().as_str()))
+        .one(db)
+        .await?;
+    let target;
+    if let Some(model) = opt_model {
+        target = model;
+    } else {
+        target = ObjectId::<post::Model>::from(Url::parse(query.url.clone().unwrap().as_str())?)
+            .dereference(&data.to_request_data())
             .await?;
-        let target;
-        if let Some(model) = opt_model {
-            target = model;
-        } else {
-            target = ObjectId::<post::Model>::from(Url::parse(query.url.clone().unwrap().as_str())?)
-                .dereference(&data.to_request_data())
-                .await?;
-        }
+    }
 
     Ok(HttpResponse::Ok()
         .content_type("application/json")
@@ -115,6 +115,41 @@ async fn fetch_post(
     Ok(HttpResponse::Ok()
         .content_type(FEDERATION_CONTENT_TYPE)
         .json(crate::objects::post::Note::from_db(&post)))
+}
+
+#[get("/apbridge/user/{user}")]
+async fn fetch_user(
+    path: web::Path<String>,
+    state: web::Data<State>,
+) -> actix_web::Result<HttpResponse, error::Error> {
+    let db = DB.get().unwrap();
+
+    let user = prelude::User::find()
+        .filter(post::Column::Id.eq(path.as_str()))
+        .one(db)
+        .await?;
+
+    let user = match user {
+        Some(user) => user,
+        None => return Ok(HttpResponse::NotFound().finish()),
+    };
+
+    Ok(HttpResponse::Ok()
+        .content_type(FEDERATION_CONTENT_TYPE)
+        .json(crate::objects::person::Person {
+            kind: Default::default(),
+            id: generate_user_id(&API_DOMAIN, &user.id)?.into(),
+            preferred_username: user.username.clone(),
+            name: user.name.clone(),
+            summary: user.summary.clone(),
+            url: Url::parse(user.url.as_str()).unwrap(),
+            inbox: Url::parse(user.inbox.as_str()).unwrap(),
+            public_key: PublicKey {
+                owner: Url::parse(user.url.as_str()).unwrap(),
+                public_key_pem: user.public_key,
+                id: format!("{}#main-key", Url::parse(user.url.as_str()).unwrap()),
+            },
+        }))
 }
 
 #[get("/apbridge/lysand/object/{post}")]

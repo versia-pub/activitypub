@@ -2,8 +2,13 @@ use crate::{
     database::StateHandle,
     entities::user,
     error::Error,
-    lysand::{self, conversion::receive_lysand_note},
+    lysand::{
+        self,
+        conversion::{db_user_from_url, receive_lysand_note},
+    },
     objects::person::{DbUser, PersonAcceptedActivities},
+    utils::generate_user_id,
+    API_DOMAIN, LYSAND_DOMAIN,
 };
 use activitypub_federation::{
     actix_web::{inbox::receive_activity, signing_actor},
@@ -18,6 +23,7 @@ use anyhow::anyhow;
 use serde::Deserialize;
 use tracing::info;
 use url::Url;
+use webfinger::resolve;
 
 pub fn listen(config: &FederationConfig<StateHandle>) -> Result<(), Error> {
     let hostname = config.domain();
@@ -101,9 +107,18 @@ pub async fn webfinger(
     data: Data<StateHandle>,
 ) -> Result<HttpResponse, Error> {
     let name = extract_webfinger_name(&query.resource, &data)?;
-    let db_user = data.read_user(name).await?;
+    let db_user = data.read_user(name.clone()).await;
+    let user;
+    if db_user.is_ok() {
+        user = db_user.unwrap();
+    } else {
+        let res = resolve("acct:".to_string() + name + "@" + &LYSAND_DOMAIN, true)
+            .await
+            .unwrap();
+        user = db_user_from_url(Url::parse(&res.subject)?).await?;
+    }
     Ok(HttpResponse::Ok().json(build_webfinger_response(
         query.resource.clone(),
-        Url::parse(&db_user.id)?,
+        generate_user_id(&API_DOMAIN, &user.id)?,
     )))
 }

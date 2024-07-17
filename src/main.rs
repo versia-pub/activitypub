@@ -15,7 +15,7 @@ use clap::Parser;
 use database::Database;
 use entities::post;
 use http::{http_get_user, http_post_user_inbox, webfinger};
-use lysand::http::{create_activity, fetch_lysand_post, fetch_post, query_post};
+use lysand::http::{create_activity, fetch_lysand_post, fetch_post, fetch_user, query_post};
 use objects::person::DbUser;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};
@@ -259,6 +259,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             .route("/.well-known/webfinger", web::get().to(webfinger))
             .service(index)
             .service(fetch_post)
+            .service(fetch_user)
             .service(create_activity)
             .service(query_post)
             .service(fetch_lysand_post)

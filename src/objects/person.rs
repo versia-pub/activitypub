@@ -71,14 +71,14 @@ impl DbUser {
 #[serde(rename_all = "camelCase")]
 pub struct Person {
     #[serde(rename = "type")]
-    kind: PersonType,
-    preferred_username: String,
-    name: String,
-    summary: Option<String>,
-    url: Url,
-    id: ObjectId<user::Model>,
-    inbox: Url,
-    public_key: PublicKey,
+    pub kind: PersonType,
+    pub preferred_username: String,
+    pub name: String,
+    pub summary: Option<String>,
+    pub url: Url,
+    pub id: ObjectId<user::Model>,
+    pub inbox: Url,
+    pub public_key: PublicKey,
 }
 
 #[async_trait::async_trait]

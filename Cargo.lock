@@ -2091,6 +2091,7 @@ dependencies = [
  "url",
  "uuid",
  "vcpkg",
+ "webfinger",
 ]
 
 [[package]]
@@ -4171,6 +4172,16 @@ checksum = "77afa9a11836342370f4817622a2f0f418b134426d91a82dfb48f532d2ec13ef"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webfinger"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f395336b42f1be22490390830ccfe7a735725eef086cd0574bf8759408ecb3af"
+dependencies = [
+ "reqwest 0.11.27",
+ "serde",
 ]
 
 [[package]]
