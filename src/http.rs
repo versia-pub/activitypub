@@ -115,7 +115,7 @@ pub async fn webfinger(
         let res = resolve("acct:".to_string() + name + "@" + &LYSAND_DOMAIN, true)
             .await
             .unwrap();
-        user = db_user_from_url(Url::parse(&res.aliases.get(0).unwrap())?).await?;
+        user = db_user_from_url(Url::parse(&res.links.get(0).unwrap())?).await?;
     }
     Ok(HttpResponse::Ok().json(build_webfinger_response(
         query.resource.clone(),
