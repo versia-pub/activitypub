@@ -128,6 +128,7 @@ impl Object for post::Model {
             visibility: Set("public".to_string()), // TODO: make this use the real visibility
             sensitive: Set(json.sensitive.clone().unwrap_or_default()),
             url: Set(json.id.clone().to_string()),
+            ap_json: Set(Some(serde_json::to_string(&json).unwrap())),
             ..Default::default()
         };
         let post = post

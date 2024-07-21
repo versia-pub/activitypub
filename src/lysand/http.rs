@@ -17,7 +17,7 @@ use crate::{
     },
     error,
     lysand::conversion::{lysand_post_from_db, lysand_user_from_db},
-    objects,
+    objects::{self, person::Person},
     utils::{base_url_decode, generate_create_id, generate_user_id},
     Response, API_DOMAIN, DB, FEDERATION_CONFIG,
 };
@@ -134,29 +134,11 @@ async fn fetch_user(
         None => return Ok(HttpResponse::NotFound().finish()),
     };
 
-    let bridge_user_url = generate_user_id(&API_DOMAIN, &user.id)?;
-    let inbox = Url::parse(&format!(
-        "https://{}/{}/inbox",
-        API_DOMAIN.to_string(),
-        &user.username.clone()
-    ))?;
+    let deserialized_user: Person = serde_json::from_str(user.ap_json.as_ref().unwrap().as_str())?;
 
     Ok(HttpResponse::Ok()
         .content_type(FEDERATION_CONTENT_TYPE)
-        .json(WithContext::new_default(crate::objects::person::Person {
-            kind: Default::default(),
-            id: bridge_user_url.clone().into(),
-            preferred_username: user.username.clone(),
-            name: user.name.clone(),
-            summary: user.summary.clone(),
-            url: Url::parse(user.url.as_str()).unwrap(),
-            inbox,
-            public_key: PublicKey {
-                owner: bridge_user_url.clone(),
-                public_key_pem: user.public_key,
-                id: format!("{}#main-key", bridge_user_url.clone()),
-            },
-        })))
+        .json(WithContext::new_default(deserialized_user)))
 }
 
 #[get("/apbridge/lysand/object/{post}")]

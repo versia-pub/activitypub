@@ -79,6 +79,50 @@ pub struct Person {
     pub id: ObjectId<user::Model>,
     pub inbox: Url,
     pub public_key: PublicKey,
+    pub indexable: Option<bool>,
+    pub discoverable: Option<bool>,
+    pub manually_approves_followers: Option<bool>,
+    pub followers: Option<Url>,
+    pub following: Option<Url>,
+    pub featured: Option<Url>,
+    pub endpoints: Option<EndpointType>,
+    pub outbox: Option<Url>,
+    pub featured_tags: Option<Url>,
+    pub tag: Option<Vec<TagType>>,
+    pub icon: Option<IconType>,
+    pub image: Option<IconType>,
+    pub attachment: Option<Vec<AttachmentType>>,
+}
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TagType {
+    pub id: Url,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub type_: String,
+    pub updated: DateTime<Utc>,
+    pub icon: IconType,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EndpointType {
+    pub shared_inbox: Url,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct IconType {
+    #[serde(rename = "type")]
+    pub type_: String, //Always "Image"
+    pub media_type: String,
+    pub url: Url,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AttachmentType {
+    #[serde(rename = "type")]
+    pub type_: String, //Always "PropertyValue"
+    pub name: String,
+    pub value: String,
 }
 
 #[async_trait::async_trait]
@@ -103,16 +147,8 @@ impl Object for user::Model {
     }
 
     async fn into_json(self, _data: &Data<Self::DataType>) -> Result<Self::Kind, Self::Error> {
-        Ok(Person {
-            preferred_username: self.username.clone(),
-            kind: Default::default(),
-            id: Url::parse(&self.id).unwrap().into(),
-            inbox: Url::parse(&self.inbox).unwrap(),
-            public_key: self.public_key(),
-            name: self.name.clone(),
-            summary: self.summary.clone(),
-            url: Url::parse(&self.url).unwrap(),
-        })
+        let serialized = serde_json::from_str(self.ap_json.as_ref().unwrap().as_str())?;
+        Ok(serialized)
     }
 
     async fn verify(
@@ -135,6 +171,7 @@ impl Object for user::Model {
         if let Some(user) = query {
             return Ok(user);
         }
+        let copied_json = json.clone();
         let model = user::ActiveModel {
             id: Set(Uuid::now_v7().to_string()),
             username: Set(json.preferred_username),
@@ -148,6 +185,7 @@ impl Object for user::Model {
             following_count: Set(0),
             created_at: Set(Utc::now()),
             last_refreshed_at: Set(Utc::now()),
+            ap_json: Set(Some(serde_json::to_string(&copied_json).unwrap())),
             ..Default::default()
         };
         let model = model.insert(_data.database_connection.as_ref()).await;

@@ -156,6 +156,34 @@ impl ContentFormat {
 
         Ok(self.x.clone().values().next().unwrap().content.clone())
     }
+
+    pub async fn select_rich_img_touple(&self) -> anyhow::Result<(String, String)> {
+        if let Some(entry) = self.x.get("image/webp") {
+            return Ok(("image/webp".to_string(), entry.content.clone()));
+        }
+        if let Some(entry) = self.x.get("image/png") {
+            return Ok(("image/png".to_string(), entry.content.clone()));
+        }
+        if let Some(entry) = self.x.get("image/avif") {
+            return Ok(("image/avif".to_string(), entry.content.clone()));
+        }
+        if let Some(entry) = self.x.get("image/jxl") {
+            return Ok(("image/jxl".to_string(), entry.content.clone()));
+        }
+        if let Some(entry) = self.x.get("image/jpeg") {
+            return Ok(("image/jpeg".to_string(), entry.content.clone()));
+        }
+        if let Some(entry) = self.x.get("image/gif") {
+            return Ok(("image/gif".to_string(), entry.content.clone()));
+        }
+        if let Some(entry) = self.x.get("image/bmp") {
+            return Ok(("image/bmp".to_string(), entry.content.clone()));
+        }
+
+        let touple = self.x.iter().next().unwrap();
+
+        Ok((touple.0.clone(), touple.1.content.clone()))
+    }
 }
 
 impl Serialize for ContentFormat {
@@ -182,8 +210,8 @@ impl<'de> Deserialize<'de> for ContentFormat {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FieldKV {
-    key: ContentFormat,
-    value: ContentFormat,
+    pub key: ContentFormat,
+    pub value: ContentFormat,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -224,7 +252,6 @@ pub struct User {
     #[serde(with = "iso_lysand")]
     pub created_at: OffsetDateTime,
     pub display_name: Option<String>,
-    // TODO bio: Option<String>,
     pub inbox: Url,
     pub outbox: Url,
     pub featured: Url,
@@ -238,6 +265,24 @@ pub struct User {
     pub header: Option<ContentFormat>,
     pub fields: Option<Vec<FieldKV>>,
     pub indexable: bool,
+    pub extensions: Option<ExtensionSpecs>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ExtensionSpecs {
+    #[serde(rename = "org.lysand:custom_emojis")]
+    pub custom_emojis: Option<CustomEmojis>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CustomEmojis {
+    pub emojis: Vec<CustomEmoji>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CustomEmoji {
+    pub name: String,
+    pub url: ContentFormat,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

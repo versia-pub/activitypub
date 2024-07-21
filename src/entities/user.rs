@@ -26,6 +26,7 @@ pub struct Model {
     pub following: Option<String>,
     pub followers: Option<String>,
     pub inbox: String,
+    pub ap_json: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

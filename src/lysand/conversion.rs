@@ -3,6 +3,7 @@ use activitystreams_kinds::public;
 use anyhow::{anyhow, Ok};
 use async_recursion::async_recursion;
 use chrono::{DateTime, TimeZone, Utc};
+use reqwest::header;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
@@ -11,9 +12,13 @@ use url::Url;
 use crate::{
     database::State,
     entities::{self, post, prelude, user},
-    objects::post::Mention,
+    objects::{
+        self,
+        person::{AttachmentType, EndpointType, IconType, Person, TagType},
+        post::Mention,
+    },
     utils::{generate_lysand_post_url, generate_object_id, generate_user_id},
-    API_DOMAIN, DB, FEDERATION_CONFIG, LYSAND_DOMAIN,
+    API_DOMAIN, DB, FEDERATION_CONFIG, LOCAL_USER_NAME, LYSAND_DOMAIN, USERNAME,
 };
 
 use super::{
@@ -80,6 +85,8 @@ pub async fn lysand_user_from_db(
     user: entities::user::Model,
 ) -> anyhow::Result<super::objects::User> {
     let url = Url::parse(&user.url)?;
+    let ap = user.ap_json.unwrap();
+    let serialized_ap: crate::objects::person::Person = serde_json::from_str(&ap)?;
     let inbox_url = Url::parse("https://ap.lysand.org/apbridge/lysand/inbox")?;
     let outbox_url = Url::parse(
         ("https://ap.lysand.org/apbridge/lysand/outbox/".to_string() + &user.id).as_str(),
@@ -113,6 +120,59 @@ pub async fn lysand_user_from_db(
         "text/html".to_string(),
         ContentEntry::from_string(user.summary.unwrap_or_default()),
     );
+    let avatar = match serialized_ap.icon {
+        Some(icon) => {
+            let mut content_format = ContentFormat::default();
+            let content_entry = ContentEntry::from_string(icon.url.to_string());
+            content_format.x.insert(icon.type_, content_entry);
+            Some(content_format)
+        }
+        None => None,
+    };
+    let header = match serialized_ap.image {
+        Some(image) => {
+            let mut content_format = ContentFormat::default();
+            let content_entry = ContentEntry::from_string(image.url.to_string());
+            content_format.x.insert(image.type_, content_entry);
+            Some(content_format)
+        }
+        None => None,
+    };
+    let mut fields = Vec::new();
+    if let Some(attachments) = serialized_ap.attachment {
+        for attachment in attachments {
+            let mut key = ContentFormat::default();
+            let mut value = ContentFormat::default();
+            key.x.insert(
+                "text/html".to_string(),
+                ContentEntry::from_string(attachment.name),
+            );
+            value.x.insert(
+                "text/html".to_string(),
+                ContentEntry::from_string(attachment.value),
+            );
+            fields.push(super::objects::FieldKV { key, value });
+        }
+    }
+    let emojis = match serialized_ap.tag {
+        Some(tags) => {
+            let mut emojis = Vec::new();
+            for tag in tags {
+                let mut content_format = ContentFormat::default();
+                let content_entry = ContentEntry::from_string(tag.id.to_string());
+                content_format.x.insert(tag.type_, content_entry);
+                emojis.push(super::objects::CustomEmoji {
+                    name: tag.name,
+                    url: content_format,
+                });
+            }
+            Some(super::objects::CustomEmojis { emojis })
+        }
+        None => None,
+    };
+    let extensions = super::objects::ExtensionSpecs {
+        custom_emojis: emojis,
+    };
     let user = super::objects::User {
         rtype: super::objects::LysandType::User,
         id: uuid::Uuid::try_parse(&user.id)?,
@@ -127,9 +187,9 @@ pub async fn lysand_user_from_db(
         likes: likes_url,
         dislikes: dislikes_url,
         bio: Some(bio),
-        avatar: None,
-        header: None,
-        fields: None,
+        avatar,
+        header,
+        fields: Some(fields),
         indexable: false,
         created_at: OffsetDateTime::from_unix_timestamp(user.created_at.timestamp()).unwrap(),
         public_key: PublicKey {
@@ -137,6 +197,7 @@ pub async fn lysand_user_from_db(
             public_key: "AAAAC3NzaC1lZDI1NTE5AAAAIMxsX+lEWkHZt9NOvn9yYFP0Z++186LY4b97C4mwj/f2"
                 .to_string(), // dummy key
         },
+        extensions: Some(extensions),
     };
     Ok(user)
 }
@@ -211,6 +272,101 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
     } else {
         let ls_user = fetch_user_from_url(url).await?;
         let keypair = generate_actor_keypair()?;
+        let bridge_user_url = generate_user_id(&API_DOMAIN, &ls_user.id.to_string())?;
+        let inbox = Url::parse(&format!(
+            "https://{}/{}/inbox",
+            API_DOMAIN.to_string(),
+            ls_user.username.clone()
+        ))?;
+        let icon = if let Some(avatar) = ls_user.avatar {
+            let avatar_url = avatar.select_rich_img_touple().await?;
+            Some(IconType {
+                type_: "Image".to_string(),
+                media_type: avatar_url.0,
+                url: Url::parse(&avatar_url.1).unwrap(),
+            })
+        } else {
+            None
+        };
+        let image = if let Some(header) = ls_user.header {
+            let header_url = header.select_rich_img_touple().await?;
+            Some(IconType {
+                type_: "Image".to_string(),
+                media_type: header_url.0,
+                url: Url::parse(&header_url.1).unwrap(),
+            })
+        } else {
+            None
+        };
+        let mut attachments: Vec<AttachmentType> = Vec::new();
+        if let Some(fields) = ls_user.fields {
+            for attachment in fields {
+                attachments.push(AttachmentType {
+                    type_: "PropertyValue".to_string(),
+                    name: attachment.key.select_rich_text().await?,
+                    value: attachment.value.select_rich_text().await?,
+                });
+            }
+        }
+        let mut tags: Vec<TagType> = Vec::new();
+        if let Some(extensions) = ls_user.extensions {
+            if let Some(custom_emojis) = extensions.custom_emojis {
+                for emoji in custom_emojis.emojis {
+                    let touple = emoji.url.select_rich_img_touple().await?;
+                    tags.push(TagType {
+                        id: Url::parse(&touple.1).unwrap(),
+                        name: emoji.name,
+                        type_: "Emoji".to_string(),
+                        updated: Utc::now(),
+                        icon: IconType {
+                            type_: "Image".to_string(),
+                            media_type: touple.0,
+                            url: Url::parse(&touple.1).unwrap(),
+                        },
+                    });
+                }
+            }
+        }
+        let ap_json = Person {
+            kind: Default::default(),
+            id: bridge_user_url.clone().into(),
+            preferred_username: ls_user.username.clone(),
+            inbox,
+            public_key: activitypub_federation::protocol::public_key::PublicKey {
+                owner: bridge_user_url.clone(),
+                public_key_pem: keypair.public_key.clone(),
+                id: format!("{}#main-key", bridge_user_url.clone()),
+            },
+            name: ls_user
+                .display_name
+                .clone()
+                .unwrap_or(ls_user.username.clone()),
+            summary: option_content_format_text(ls_user.bio.clone()).await,
+            url: ls_user.uri.clone(),
+            indexable: Some(ls_user.indexable),
+            discoverable: Some(true),
+            manually_approves_followers: Some(false),
+            followers: None,
+            following: None,
+            featured: None,
+            featured_tags: None,
+            outbox: None,
+            endpoints: Some(EndpointType {
+                shared_inbox: Url::parse(
+                    &format!(
+                        "https://{}/{}/inbox",
+                        API_DOMAIN.to_string(),
+                        &USERNAME.to_string()
+                    )
+                    .as_str(),
+                )
+                .unwrap(),
+            }),
+            icon,
+            image,
+            attachment: Some(attachments),
+            tag: Some(tags),
+        };
         let user = entities::user::ActiveModel {
             id: Set(ls_user.id.to_string()),
             username: Set(ls_user.username.clone()),
@@ -230,6 +386,7 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
             updated_at: Set(Some(Utc::now())),
             followers: Set(Some(ls_user.followers.to_string())),
             following: Set(Some(ls_user.following.to_string())),
+            ap_json: Set(Some(serde_json::to_string(&ap_json).unwrap())),
             ..Default::default()
         };
         let db = DB.get().unwrap();
