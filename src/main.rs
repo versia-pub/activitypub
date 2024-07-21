@@ -16,7 +16,7 @@ use database::Database;
 use entities::post;
 use http::{http_get_user, http_post_user_inbox, webfinger};
 use lysand::http::{create_activity, fetch_lysand_post, fetch_post, fetch_user, query_post};
-use objects::person::DbUser;
+use objects::person::{DbUser, Person};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -188,6 +188,34 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     ))?;
     let keypair = generate_actor_keypair()?;
 
+    let ap_json = Person {
+        id: ap_id.clone().into(),
+        preferred_username: USERNAME.to_string(),
+        name: "Test account <3".to_string(),
+        inbox: inbox.clone(),
+        public_key: activitypub_federation::protocol::public_key::PublicKey {
+            owner: ap_id.clone(),
+            public_key_pem: keypair.public_key.clone(),
+            id: format!("{}#main-key", ap_id.clone()),
+        },
+        summary: Some("Test account <3".to_string()),
+        url: ap_id.clone(),
+        kind: Default::default(),
+        indexable: Some(false),
+        discoverable: Some(false),
+        icon: None,
+        image: None,
+        attachment: None,
+        tag: None,
+        endpoints: None,
+        followers: None,
+        following: None,
+        featured: None,
+        outbox: None,
+        featured_tags: None,
+        manually_approves_followers: Some(false),
+    };
+
     let user = entities::user::ActiveModel {
         id: Set(ap_id.clone().into()),
         username: Set(USERNAME.to_string()),
@@ -201,6 +229,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         url: Set(ap_id.to_string()),
         local: Set(true),
         created_at: Set(Utc::now()),
+        ap_json: Set(Some(serde_json::to_string(&ap_json).unwrap())),
         ..Default::default()
     };
 
