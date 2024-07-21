@@ -110,6 +110,7 @@ pub struct EndpointType {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct IconType {
     #[serde(rename = "type")]
     pub type_: String, //Always "Image"
