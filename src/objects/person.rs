@@ -95,12 +95,13 @@ pub struct Person {
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TagType {
-    pub id: Url,
+    pub id: Option<Url>,
+    pub href: Option<Url>,
     pub name: String,
     #[serde(rename = "type")]
     pub type_: String,
-    pub updated: DateTime<Utc>,
-    pub icon: IconType,
+    pub updated: Option<DateTime<Utc>>,
+    pub icon: Option<IconType>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

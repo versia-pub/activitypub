@@ -159,7 +159,10 @@ pub async fn lysand_user_from_db(
             let mut emojis = Vec::new();
             for tag in tags {
                 let mut content_format = ContentFormat::default();
-                let content_entry = ContentEntry::from_string(tag.id.to_string());
+                if tag.id.is_none() {
+                    continue;
+                }
+                let content_entry = ContentEntry::from_string(tag.id.unwrap().to_string());
                 content_format.x.insert(tag.type_, content_entry);
                 emojis.push(super::objects::CustomEmoji {
                     name: tag.name,
@@ -314,15 +317,16 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
                 for emoji in custom_emojis.emojis {
                     let touple = emoji.url.select_rich_img_touple().await?;
                     tags.push(TagType {
-                        id: Url::parse(&touple.1).unwrap(),
+                        id: Some(Url::parse(&touple.1).unwrap()),
                         name: emoji.name,
                         type_: "Emoji".to_string(),
-                        updated: Utc::now(),
-                        icon: IconType {
+                        updated: Some(Utc::now()),
+                        href: None,
+                        icon: Some(IconType {
                             type_: "Image".to_string(),
                             media_type: touple.0,
                             url: Url::parse(&touple.1).unwrap(),
-                        },
+                        }),
                     });
                 }
             }
