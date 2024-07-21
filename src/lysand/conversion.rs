@@ -124,7 +124,7 @@ pub async fn lysand_user_from_db(
         Some(icon) => {
             let mut content_format = ContentFormat::default();
             let content_entry = ContentEntry::from_string(icon.url.to_string());
-            content_format.x.insert(icon.type_, content_entry);
+            content_format.x.insert(icon.media_type, content_entry);
             Some(content_format)
         }
         None => None,
@@ -133,7 +133,7 @@ pub async fn lysand_user_from_db(
         Some(image) => {
             let mut content_format = ContentFormat::default();
             let content_entry = ContentEntry::from_string(image.url.to_string());
-            content_format.x.insert(image.type_, content_entry);
+            content_format.x.insert(image.media_type, content_entry);
             Some(content_format)
         }
         None => None,
@@ -159,13 +159,19 @@ pub async fn lysand_user_from_db(
             let mut emojis = Vec::new();
             for tag in tags {
                 let mut content_format = ContentFormat::default();
-                if tag.id.is_none() {
+                if tag.icon.is_none() {
                     continue;
                 }
-                let content_entry = ContentEntry::from_string(tag.id.unwrap().to_string());
-                content_format.x.insert(tag.type_, content_entry);
+                let content_entry =
+                    ContentEntry::from_string(tag.icon.clone().unwrap().url.to_string());
+                content_format
+                    .x
+                    .insert(tag.icon.unwrap().media_type, content_entry);
+                let mut name = tag.name.chars();
+                name.next();
+                name.next_back();
                 emojis.push(super::objects::CustomEmoji {
-                    name: tag.name,
+                    name: name.as_str().to_string(),
                     url: content_format,
                 });
             }
@@ -318,7 +324,7 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
                     let touple = emoji.url.select_rich_img_touple().await?;
                     tags.push(TagType {
                         id: Some(Url::parse(&touple.1).unwrap()),
-                        name: emoji.name,
+                        name: ":".to_string() + &emoji.name + ":",
                         type_: "Emoji".to_string(),
                         updated: Some(Utc::now()),
                         href: None,
