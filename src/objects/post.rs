@@ -39,9 +39,12 @@ pub struct Note {
     #[serde(deserialize_with = "deserialize_one_or_many")]
     pub(crate) to: Vec<Url>,
     pub(crate) content: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) in_reply_to: Option<ObjectId<post::Model>>,
     pub(crate) tag: Vec<Mention>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) sensitive: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) cc: Option<Vec<Url>>,
 }
 

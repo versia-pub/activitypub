@@ -79,28 +79,45 @@ pub struct Person {
     pub id: ObjectId<user::Model>,
     pub inbox: Url,
     pub public_key: PublicKey,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub indexable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub discoverable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub manually_approves_followers: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub followers: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub following: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub featured: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub endpoints: Option<EndpointType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub outbox: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub featured_tags: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tag: Option<Vec<TagType>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<IconType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub image: Option<IconType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub attachment: Option<Vec<AttachmentType>>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TagType {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub href: Option<Url>,
     pub name: String,
     #[serde(rename = "type")]
     pub type_: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub updated: Option<DateTime<Utc>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<IconType>,
 }
 

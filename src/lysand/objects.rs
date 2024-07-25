@@ -217,13 +217,21 @@ pub struct FieldKV {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ContentEntry {
     content: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     size: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     hash: Option<ContentHash>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     blurhash: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     fps: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     width: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     height: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     duration: Option<u64>,
 }
 impl ContentEntry {
@@ -251,6 +259,7 @@ pub struct User {
     pub uri: Url,
     #[serde(with = "iso_lysand")]
     pub created_at: OffsetDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
     pub inbox: Url,
     pub outbox: Url,
@@ -260,17 +269,23 @@ pub struct User {
     pub likes: Url,
     pub dislikes: Url,
     pub username: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub bio: Option<ContentFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub avatar: Option<ContentFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub header: Option<ContentFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub fields: Option<Vec<FieldKV>>,
     pub indexable: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub extensions: Option<ExtensionSpecs>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExtensionSpecs {
     #[serde(rename = "org.lysand:custom_emojis")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_emojis: Option<CustomEmojis>,
 }
 
@@ -297,7 +312,9 @@ pub struct LinkPreview {
     description: String,
     title: String,
     link: Url,
+    #[serde(skip_serializing_if = "Option::is_none")]
     image: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     icon: Option<Url>,
 }
 
@@ -310,17 +327,29 @@ pub struct Note {
     pub author: Url,
     #[serde(with = "iso_lysand")]
     pub created_at: OffsetDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<CategoryType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<ContentFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub device: Option<DeviceInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub previews: Option<Vec<LinkPreview>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub attachments: Option<Vec<ContentFormat>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub replies_to: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub quotes: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub mentions: Option<Vec<Url>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub is_sensitive: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub visibility: Option<VisibilityType>,
     //TODO extensions
 }
@@ -329,7 +358,9 @@ pub struct Note {
 pub struct Outbox {
     pub first: Url,
     pub last: Url,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub next: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub prev: Option<Url>,
     pub items: Vec<Note>,
 }
