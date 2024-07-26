@@ -106,7 +106,7 @@ pub struct Person {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachment: Option<Vec<AttachmentType>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub also_known_as: Option<Url>,
+    pub also_known_as: Option<Vec<Url>>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TagType {

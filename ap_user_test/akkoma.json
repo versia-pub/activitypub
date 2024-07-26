@@ -1,0 +1,99 @@
+{
+    "@context": [
+        "https://www.w3.org/ns/activitystreams",
+        "https://donotsta.re/schemas/litepub-0.1.jsonld",
+        {
+            "@language": "und"
+        }
+    ],
+    "alsoKnownAs": [
+        "https://catcatnya.com/users/riedler"
+    ],
+    "attachment": [
+        {
+            "name": "Languages",
+            "type": "PropertyValue",
+            "value": "Austrian (native), English (fluent), Standard German (fluent)"
+        },
+        {
+            "name": "Website",
+            "type": "PropertyValue",
+            "value": "<a href=\"https://riedler.wien/\" rel=\"ugc\">https://riedler.wien/</a>"
+        },
+        {
+            "name": "programming (order: familiarity)",
+            "type": "PropertyValue",
+            "value": "Python, PHP, JS, C99, Java"
+        },
+        {
+            "name": "webdev (order: random)",
+            "type": "PropertyValue",
+            "value": "HTML5, CSS3, SVG"
+        },
+        {
+            "name": "pronounciation (approx)",
+            "type": "PropertyValue",
+            "value": "reedluh"
+        },
+        {
+            "name": "pronounciation (IPA)",
+            "type": "PropertyValue",
+            "value": "ʁiːdlä"
+        },
+        {
+            "name": "personal info :3",
+            "type": "PropertyValue",
+            "value": "<a href=\"https://pronouns.cc/@Riedler\" rel=\"ugc\">https://pronouns.cc/@Riedler</a>"
+        },
+        {
+            "name": "age",
+            "type": "PropertyValue",
+            "value": "adult"
+        }
+    ],
+    "capabilities": {},
+    "discoverable": true,
+    "endpoints": {
+        "oauthAuthorizationEndpoint": "https://donotsta.re/oauth/authorize",
+        "oauthRegistrationEndpoint": "https://donotsta.re/api/v1/apps",
+        "oauthTokenEndpoint": "https://donotsta.re/oauth/token",
+        "sharedInbox": "https://donotsta.re/inbox"
+    },
+    "featured": "https://donotsta.re/users/Riedler/collections/featured",
+    "followers": "https://donotsta.re/users/Riedler/followers",
+    "following": "https://donotsta.re/users/Riedler/following",
+    "icon": {
+        "type": "Image",
+        "url": "https://asdf.donotsta.re/media/c5671c1d2d6eec83124b00dc2eb010cef7b4d9734074a27feff0cd2b9eac91dc.png"
+    },
+    "id": "https://donotsta.re/users/Riedler",
+    "image": {
+        "type": "Image",
+        "url": "https://asdf.donotsta.re/media/397f19d2f61853b9cba4f63aa7d4235225a4744a188279f6095b3cfbdf19a1eb.png"
+    },
+    "inbox": "https://donotsta.re/users/Riedler/inbox",
+    "manuallyApprovesFollowers": true,
+    "name": "Riedler (2004) [E] [!]",
+    "outbox": "https://donotsta.re/users/Riedler/outbox",
+    "preferredUsername": "Riedler",
+    "publicKey": {
+        "id": "https://donotsta.re/users/Riedler#main-key",
+        "owner": "https://donotsta.re/users/Riedler",
+        "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4rUBqCAMMSDjuiepr+3R\nZMLZ1qF4ybsAI1iOcMU+l7YLkZao8KpfYb7NI5AoXUiR8OhCaFFLgbnQQOBuXzzT\nmMa5KOMEiCUwTCSN7nHrAcULWuT9RPA8Uo/itin2Q5rLkGQHWu04IuBZSrLyql4E\nvnRIybaFaNx/uYIsVD6UI/9Gmp1HSYn1hfzSVywZy1umeo7dimRN8joaAy4VTBgl\nyA5TgFsEWKF//4JUtdPCIRMnRgUnihwNPk0dkWa7fPt4syFWEg1smjulFKJ4hSB6\nJ9oqQJ0Wj0i+K+x+hS68PG38Ofj+BTlF0os2MmEcSXG9859W7hAhA0TzoQQsEXDM\nHwIDAQAB\n-----END PUBLIC KEY-----\n\n"
+    },
+    "summary": "Austrian Musician and Programmer. From Linz, living in Vienna.<br/><br/>Several people have told me that not all of this bio federates to other software properly, so please open my profile externally, to read the whole thing. Thanks, and sorry for the inconvenience!<br/><br/>In uwus with <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AcLGFPIEBPczHLP2Lw\" href=\"https://tech.lgbt/@Autumn_Maxime\" rel=\"ugc\">@<span>Autumn_Maxime@tech.lgbt</span></a></span>, <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AAcLsLRX2zm0dbbXHM\" href=\"https://donotsta.re/users/domi\" rel=\"ugc\">@<span>domi@donotsta.re</span></a></span>, she who bangs outside of fedi, <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"Ae0GjjJMdsUKeCS8jQ\" href=\"https://not.an.evilcyberhacker.net/@phos\" rel=\"ugc\">@<span>phos@not.an.evilcyberhacker.net</span></a></span>, <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AXcm6z3VImlLMSmYwi\" href=\"https://not.an.evilcyberhacker.net/@darkphoenix\" rel=\"ugc\">@<span>darkphoenix@not.an.evilcyberhacker.net</span></a></span> and <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AQMoXdVLtxjDMiK0SO\" href=\"https://donotsta.re/users/Lili\" rel=\"ugc\">@<span>lili@donotsta.re</span></a></span> :3<br/><br/>Professional Reviews™:<br/>   <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AQkD6XWhWPJnGeN2MS\" href=\"https://catcatnya.com/@benaryorg\" rel=\"ugc\">@<span>benaryorg@catcatnya.com</span></a></span>  - &quot;suspiciously knowledgeable tech person with inspiring Thoughts™ and Opinions™&quot;<br/>   shebang - &quot;bsdhdkshhejeeh riedler whaaa eirurjrjrkeikwwbebrufyfirjrhjwnedj&quot;<br/>   <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AXv31NdX2IJbWIgyUy\" href=\"https://plush.city/@heatherhorns_lite\" rel=\"ugc\">@<span>heatherhorns_lite@plush.city</span></a></span> - &quot;Riedler&#39;s got the moves&quot;<br/>   <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AdVvWtdO2ct6eq1Z56\" href=\"https://tech.lgbt/@keyboardsmash\" rel=\"ugc\">@<span>keyboardsmash@tech.lgbt</span></a></span> - &quot;i know them from the internet and they are nice. also dad jokes.&quot;<br/>   <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AiWaF6eoRSyY7HVttQ\" href=\"https://donotsta.re/users/Ak1ra\" rel=\"ugc\">@<span>Ak1ra</span></a></span> - &quot;You are very caring Riedler&quot;<br/>   <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AAcLsLRX2zm0dbbXHM\" href=\"https://donotsta.re/users/domi\" rel=\"ugc\">@<span>domi</span></a></span> - &quot;God&#39;s biggest eeper&quot;<br/>   <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AWFInQhcYuy288f9bk\" href=\"https://donotsta.re/users/april\" rel=\"ugc\">@<span>april</span></a></span> - &quot;I meowed at you, why u don respond🥺&quot;<br/>   <span class=\"h-card\"><a class=\"u-url mention\" data-user=\"AQMoXdVLtxjDMiK0SO\" href=\"https://donotsta.re/users/Lili\" rel=\"ugc\">@<span>Lili</span></a></span> - &quot;someday I&#39;ll think about something&quot;<br/><br/>I accept follow requests if you pass the vibe check. Try it out :meowmlem: To check that you read my bio, tell me your favourite food.<br/><br/>Profile picture is a very stylized version of a capital R. It&#39;s a pink-white-blue sine wave with a softened nail thing poking through the left side. Yes, trans colors.<br/>Header is a very stylized version of &quot;Riedler&quot;. The shape of the Rs are similar to my profile picture, just without the nail thing. Various shapes have lines exending throughout the rest of the image, creating a nice pattern between the pink, white and blue.",
+    "tag": [
+        {
+            "icon": {
+                "type": "Image",
+                "url": "https://donotsta.re/emoji/meow/meowmlem.png"
+            },
+            "id": "https://donotsta.re/emoji/meow/meowmlem.png",
+            "name": ":meowmlem:",
+            "type": "Emoji",
+            "updated": "1970-01-01T00:00:00Z"
+        }
+    ],
+    "type": "Person",
+    "url": "https://donotsta.re/users/Riedler"
+}
