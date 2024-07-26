@@ -3,7 +3,7 @@ use activitystreams_kinds::public;
 use anyhow::{anyhow, Ok};
 use async_recursion::async_recursion;
 use chrono::{DateTime, TimeZone, Utc};
-use reqwest::header;
+use reqwest::header::{self, CONTENT_TYPE};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
@@ -124,7 +124,14 @@ pub async fn lysand_user_from_db(
         Some(icon) => {
             let mut content_format = ContentFormat::default();
             let content_entry = ContentEntry::from_string(icon.url.to_string());
-            content_format.x.insert(icon.media_type, content_entry);
+            let media_type = icon.media_type.unwrap_or({
+                let req = request_client().get(icon.url.clone()).build()?;
+                let res = request_client().execute(req).await?;
+                let headers = res.headers();
+                let content_type_header = headers.get(CONTENT_TYPE);
+                content_type_header.unwrap().to_str().unwrap().to_string()
+            });
+            content_format.x.insert(media_type, content_entry);
             Some(content_format)
         }
         None => None,
@@ -133,7 +140,14 @@ pub async fn lysand_user_from_db(
         Some(image) => {
             let mut content_format = ContentFormat::default();
             let content_entry = ContentEntry::from_string(image.url.to_string());
-            content_format.x.insert(image.media_type, content_entry);
+            let media_type = image.media_type.unwrap_or({
+                let req = request_client().get(image.url.clone()).build()?;
+                let res = request_client().execute(req).await?;
+                let headers = res.headers();
+                let content_type_header = headers.get(CONTENT_TYPE);
+                content_type_header.unwrap().to_str().unwrap().to_string()
+            });
+            content_format.x.insert(media_type, content_entry);
             Some(content_format)
         }
         None => None,
@@ -164,9 +178,20 @@ pub async fn lysand_user_from_db(
                 }
                 let content_entry =
                     ContentEntry::from_string(tag.icon.clone().unwrap().url.to_string());
+                let icon = tag.icon.unwrap();
+                let media_type = icon.media_type.unwrap_or({
+                    let req = request_client().get(icon.url.clone()).build()?;
+                    let res = request_client().execute(req).await?;
+                    let headers = res.headers();
+                    let content_type_header = headers.get(CONTENT_TYPE);
+                    if content_type_header.is_none() {
+                        continue;
+                    }
+                    content_type_header.unwrap().to_str().unwrap().to_string()
+                });
                 content_format
                     .x
-                    .insert(tag.icon.unwrap().media_type, content_entry);
+                    .insert(media_type, content_entry);
                 let mut name = tag.name.chars();
                 name.next();
                 name.next_back();
@@ -291,7 +316,7 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
             let avatar_url = avatar.select_rich_img_touple().await?;
             Some(IconType {
                 type_: "Image".to_string(),
-                media_type: avatar_url.0,
+                media_type: Some(avatar_url.0),
                 url: Url::parse(&avatar_url.1).unwrap(),
             })
         } else {
@@ -301,7 +326,7 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
             let header_url = header.select_rich_img_touple().await?;
             Some(IconType {
                 type_: "Image".to_string(),
-                media_type: header_url.0,
+                media_type: Some(header_url.0),
                 url: Url::parse(&header_url.1).unwrap(),
             })
         } else {
@@ -330,7 +355,7 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
                         href: None,
                         icon: Some(IconType {
                             type_: "Image".to_string(),
-                            media_type: touple.0,
+                            media_type: Some(touple.0),
                             url: Url::parse(&touple.1).unwrap(),
                         }),
                     });
@@ -360,6 +385,7 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
             following: None,
             featured: None,
             featured_tags: None,
+            also_known_as: None,
             outbox: None,
             endpoints: Some(EndpointType {
                 shared_inbox: Url::parse(

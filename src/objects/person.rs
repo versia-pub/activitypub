@@ -105,6 +105,8 @@ pub struct Person {
     pub image: Option<IconType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachment: Option<Vec<AttachmentType>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub also_known_as: Option<Url>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TagType {
@@ -132,7 +134,8 @@ pub struct EndpointType {
 pub struct IconType {
     #[serde(rename = "type")]
     pub type_: String, //Always "Image"
-    pub media_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub media_type: Option<String>,
     pub url: Url,
 }
 

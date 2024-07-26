@@ -212,6 +212,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
         following: None,
         featured: None,
         outbox: None,
+        also_known_as: None,
         featured_tags: None,
         manually_approves_followers: Some(false),
     };
