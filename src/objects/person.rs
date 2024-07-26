@@ -5,7 +5,7 @@ use crate::{
     },
     database::{State, StateHandle},
     entities::{self, user},
-    error::Error,
+    error::Error, API_DOMAIN,
 };
 use activitypub_federation::{
     config::Data,
@@ -223,7 +223,11 @@ impl Object for user::Model {
 
 impl Actor for user::Model {
     fn id(&self) -> Url {
-        Url::parse(&self.id).unwrap()
+        Url::parse(&format!(
+            "https://{}/apbridge/user/{}",
+            API_DOMAIN.to_string(),
+            &self.id
+        )).unwrap()
     }
 
     fn public_key_pem(&self) -> &str {
