@@ -19,6 +19,7 @@ use lysand::http::{create_activity, fetch_lysand_post, fetch_post, fetch_user, q
 use objects::person::{DbUser, Person};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use std::{
     collections::HashMap,
     env,
@@ -176,10 +177,12 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
+    let uuid = Uuid::now_v7();
+
     let ap_id = Url::parse(&format!(
-        "https://{}/{}",
+        "https://{}/apbridge/user/{}",
         API_DOMAIN.to_string(),
-        &USERNAME.to_string()
+        &uuid.to_string()
     ))?;
     let inbox = Url::parse(&format!(
         "https://{}/{}/inbox",
@@ -218,7 +221,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     };
 
     let user = entities::user::ActiveModel {
-        id: Set(ap_id.clone().into()),
+        id: Set(uuid.to_string()),
         username: Set(USERNAME.to_string()),
         name: Set("Test account <3".to_string()),
         inbox: Set(inbox.to_string()),
