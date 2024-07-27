@@ -41,11 +41,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(FollowRelation::ApAcceptId).string())
                     .col(ColumnDef::new(FollowRelation::Remote).boolean().not_null())
                     .col(ColumnDef::new(FollowRelation::ApJson).string().not_null())
-                    .col(
-                        ColumnDef::new(FollowRelation::ApAcceptJson)
-                            .string()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(FollowRelation::ApAcceptJson).string())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_follow_relation_followee_id")

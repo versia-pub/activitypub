@@ -19,7 +19,6 @@ use lysand::http::{create_activity, fetch_lysand_post, fetch_post, fetch_user, q
 use objects::person::{DbUser, Person};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use std::{
     collections::HashMap,
     env,
@@ -30,6 +29,7 @@ use tokio::signal;
 use tracing::{info, instrument::WithSubscriber};
 use url::Url;
 use utils::generate_object_id;
+use uuid::Uuid;
 
 use crate::{
     activities::create_post::CreatePost,

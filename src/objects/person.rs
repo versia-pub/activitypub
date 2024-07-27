@@ -5,7 +5,8 @@ use crate::{
     },
     database::{State, StateHandle},
     entities::{self, user},
-    error::Error, API_DOMAIN,
+    error::Error,
+    API_DOMAIN,
 };
 use activitypub_federation::{
     config::Data,
@@ -227,7 +228,8 @@ impl Actor for user::Model {
             "https://{}/apbridge/user/{}",
             API_DOMAIN.to_string(),
             &self.id
-        )).unwrap()
+        ))
+        .unwrap()
     }
 
     fn public_key_pem(&self) -> &str {

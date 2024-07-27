@@ -189,9 +189,7 @@ pub async fn lysand_user_from_db(
                     }
                     content_type_header.unwrap().to_str().unwrap().to_string()
                 });
-                content_format
-                    .x
-                    .insert(media_type, content_entry);
+                content_format.x.insert(media_type, content_entry);
                 let mut name = tag.name.chars();
                 name.next();
                 name.next_back();

@@ -355,6 +355,44 @@ pub struct Note {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Patch {
+    #[serde(rename = "type")]
+    pub rtype: LysandType,
+    pub id: Uuid,
+    pub uri: Url,
+    pub author: Url,
+    #[serde(with = "iso_lysand")]
+    pub created_at: OffsetDateTime,
+    #[serde(with = "iso_lysand")]
+    pub patched_at: OffsetDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<CategoryType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<ContentFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device: Option<DeviceInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub previews: Option<Vec<LinkPreview>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attachments: Option<Vec<ContentFormat>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub replies_to: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quotes: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mentions: Option<Vec<Url>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subject: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_sensitive: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<VisibilityType>,
+    //TODO extensions
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Outbox {
     pub first: Url,
     pub last: Url,
@@ -363,4 +401,28 @@ pub struct Outbox {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prev: Option<Url>,
     pub items: Vec<Note>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Follow {
+    #[serde(rename = "type")]
+    pub rtype: LysandType,
+    pub id: Uuid,
+    pub uri: Url,
+    pub author: Url,
+    #[serde(with = "iso_lysand")]
+    pub created_at: OffsetDateTime,
+    pub followee: Url,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FollowResult {
+    #[serde(rename = "type")]
+    pub rtype: LysandType,
+    pub id: Uuid,
+    pub uri: Url,
+    pub author: Url,
+    #[serde(with = "iso_lysand")]
+    pub created_at: OffsetDateTime,
+    pub follower: Url,
 }
