@@ -1,12 +1,9 @@
 use crate::{
-    activities::follow::Follow,
-    entities::{
+    activities::follow::Follow, entities::{
         self, follow_relation,
         prelude::{self, FollowRelation},
         user,
-    },
-    utils::generate_follow_req_id,
-    DB, FEDERATION_CONFIG,
+    }, lysand::http::main_lysand_url_to_user_and_model, utils::generate_follow_req_id, DB, FEDERATION_CONFIG
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask, fetch::object_id::ObjectId, protocol::context::WithContext,
@@ -75,7 +72,7 @@ async fn follow_request(follow: super::objects::Follow) -> Result<()> {
         ));
     }
     let data = FEDERATION_CONFIG.get().unwrap();
-    let author = lysand_url_to_user_and_model(follow.author.into()).await?;
+    let author = main_lysand_url_to_user_and_model(follow.author.into()).await?;
     let followee = lysand_url_to_user_and_model(follow.followee.into()).await?;
     let serial_ap_author = serde_json::from_str::<crate::objects::person::Person>(
         &(author.1.ap_json.clone()).unwrap(),

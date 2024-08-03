@@ -238,6 +238,29 @@ pub async fn lysand_url_to_user_and_model(
     if let Some(model) = opt_model {
         target = model;
     } else {
+        target = ObjectId::<user::Model>::from(url)
+            .dereference(&data.to_request_data())
+            .await
+            .unwrap();
+    }
+
+    Ok((lysand_user_from_db(target.clone()).await?, target))
+}
+
+pub async fn main_lysand_url_to_user_and_model(
+    url: Url,
+) -> anyhow::Result<(super::objects::User, user::Model)> {
+    let db = DB.get().unwrap();
+    let data = FEDERATION_CONFIG.get().unwrap();
+
+    let opt_model = prelude::User::find()
+        .filter(user::Column::Url.eq(url.as_str()))
+        .one(db)
+        .await?;
+    let target;
+    if let Some(model) = opt_model {
+        target = model;
+    } else {
         target = db_user_from_url(url.clone()).await?;
     }
 
