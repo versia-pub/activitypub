@@ -5,20 +5,20 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "follow_relation")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub followee_id: String,
     pub follower_id: String,
-    pub ap_json: String,
-    pub ap_accept_json: Option<String>,
-    pub ap_id: Option<String>,
-    pub ap_accept_id: Option<String>,
-    pub accept_id: Option<String>,
-    pub remote: bool,
     pub followee_host: Option<String>,
     pub follower_host: Option<String>,
     pub followee_inbox: Option<String>,
     pub follower_inbox: Option<String>,
+    pub accept_id: Option<String>,
+    pub ap_id: Option<String>,
+    pub ap_accept_id: Option<String>,
+    pub remote: bool,
+    pub ap_json: String,
+    pub ap_accept_json: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
