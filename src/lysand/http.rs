@@ -16,7 +16,10 @@ use crate::{
         prelude, user,
     },
     error,
-    lysand::conversion::{lysand_post_from_db, lysand_user_from_db},
+    lysand::{
+        conversion::{lysand_post_from_db, lysand_user_from_db},
+        inbox::inbox_entry,
+    },
     objects::{self, person::Person},
     utils::{base_url_decode, generate_create_id, generate_user_id},
     Response, API_DOMAIN, DB, FEDERATION_CONFIG,
@@ -88,6 +91,8 @@ async fn lysand_inbox(
     body: web::Bytes,
     state: web::Data<State>,
 ) -> actix_web::Result<HttpResponse, error::Error> {
+    let string = String::from_utf8(body.to_vec())?;
+    inbox_entry(&string).await?;
     Ok(HttpResponse::Created().finish())
 }
 

@@ -39,6 +39,7 @@ pub async fn inbox_entry(json: &str) -> Result<()> {
             }
             Some("Follow") => {
                 let follow_req: super::objects::Follow = serde_json::from_str(json)?;
+                follow_request(follow_req).await?;
             }
             Some("FollowAccept") => {
                 let follow_accept: super::objects::FollowResult = serde_json::from_str(json)?;

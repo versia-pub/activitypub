@@ -115,7 +115,7 @@ impl ActivityHandler for Follow {
     }
 
     async fn receive(self, data: &Data<Self::DataType>) -> Result<(), Self::Error> {
-        accept_follow(self, data).await?;
+        //accept_follow(self, data).await?; TODO replace w/ lysand forward
         Ok(())
     }
 }
@@ -140,11 +140,12 @@ impl ActivityHandler for Accept {
     async fn receive(self, data: &Data<Self::DataType>) -> Result<(), Self::Error> {
         let user = self.actor.dereference(data).await?;
         let follower = self.object.actor.dereference(data).await?;
-        save_follow(user, follower).await?;
+        save_accept_follow(user, follower, self).await?;
         Ok(())
     }
 }
 
+/*
 async fn accept_follow(
     follow_req: Follow,
     data: &Data<StateHandle>,
@@ -155,10 +156,12 @@ async fn accept_follow(
     Accept::send(follow_relation, follow_req, follower.inbox().clone(), data).await?;
     Ok(())
 }
+*/
 
-async fn save_follow(
+async fn save_accept_follow(
     followee: user::Model,
     follower: user::Model,
+    accept_activity: Accept,
 ) -> Result<follow_relation::Model, crate::error::Error> {
     let db = DB.get().unwrap();
     let query = prelude::FollowRelation::find()
@@ -169,8 +172,18 @@ async fn save_follow(
     if query.is_none() {
         return Err(crate::error::Error(anyhow::anyhow!("oopsie woopise")));
     }
+    let lysand_accept_id = uuid::Uuid::now_v7().to_string();
+    // all values in the ActiveModel that are set, except the id, will be updated
+    let active_query = follow_relation::ActiveModel {
+        id: Set(query.unwrap().id),
+        ap_accept_id: Set(Some(accept_activity.id.to_string())),
+        ap_accept_json: Set(Some(serde_json::to_string(&accept_activity).unwrap())),
+        accept_id: Set(Some(lysand_accept_id)),
+        ..Default::default()
+    };
     // modify db entry
-    let res = prelude::FollowRelation::update(query.unwrap());
+    let res = prelude::FollowRelation::update(active_query);
+    let model = res.exec(db).await?;
 
     Ok(model)
 }
