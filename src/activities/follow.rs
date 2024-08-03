@@ -171,7 +171,6 @@ async fn save_follow(
     }
     // modify db entry
     let res = prelude::FollowRelation::update(query.unwrap());
-    
 
     Ok(model)
 }

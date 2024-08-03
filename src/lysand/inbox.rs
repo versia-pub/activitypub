@@ -1,13 +1,27 @@
-
-use activitypub_federation::{activity_sending::SendActivityTask, fetch::object_id::ObjectId, protocol::context::WithContext};
+use crate::{
+    activities::follow::Follow,
+    entities::{
+        self, follow_relation,
+        prelude::{self, FollowRelation},
+        user,
+    },
+    utils::generate_follow_req_id,
+    DB, FEDERATION_CONFIG,
+};
+use activitypub_federation::{
+    activity_sending::SendActivityTask, fetch::object_id::ObjectId, protocol::context::WithContext,
+};
 use activitystreams_kinds::activity::FollowType;
 use anyhow::Result;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityOrSelect, EntityTrait, QueryFilter, Set};
 use serde::Deserialize;
 use url::Url;
-use crate::{activities::follow::Follow, entities::{self, follow_relation, prelude::{self, FollowRelation}, user}, utils::generate_follow_req_id, DB, FEDERATION_CONFIG};
 
-use super::{conversion::lysand_user_from_db, http::{lysand_url_to_user, lysand_url_to_user_and_model}, objects::LysandType};
+use super::{
+    conversion::lysand_user_from_db,
+    http::{lysand_url_to_user, lysand_url_to_user_and_model},
+    objects::LysandType,
+};
 
 pub async fn inbox_entry(json: &str) -> Result<()> {
     // Deserialize the JSON string into a dynamic value
@@ -19,27 +33,25 @@ pub async fn inbox_entry(json: &str) -> Result<()> {
         match json_type.as_str() {
             Some("Note") => {
                 let note: super::objects::Note = serde_json::from_str(json)?;
-                
             }
             Some("Patch") => {
                 let patch: super::objects::Patch = serde_json::from_str(json)?;
-                
             }
             Some("Follow") => {
                 let follow_req: super::objects::Follow = serde_json::from_str(json)?;
-                
             }
             Some("FollowAccept") => {
                 let follow_accept: super::objects::FollowResult = serde_json::from_str(json)?;
-                
             }
             Some("FollowReject") => {
                 let follow_rej: super::objects::FollowResult = serde_json::from_str(json)?;
-                
             }
             // Add more cases for other types as needed
             _ => {
-                return Err(anyhow::anyhow!("Unknown 'type' field in JSON, it is {}", json_type));
+                return Err(anyhow::anyhow!(
+                    "Unknown 'type' field in JSON, it is {}",
+                    json_type
+                ));
             }
         }
     } else {
@@ -57,20 +69,29 @@ async fn follow_request(follow: super::objects::Follow) -> Result<()> {
         .one(db)
         .await?;
     if query.is_some() {
-        return Err(anyhow::anyhow!("User is already follow requesting / following the followee"));
+        return Err(anyhow::anyhow!(
+            "User is already follow requesting / following the followee"
+        ));
     }
     let data = FEDERATION_CONFIG.get().unwrap();
     let author = lysand_url_to_user_and_model(follow.author.into()).await?;
     let followee = lysand_url_to_user_and_model(follow.followee.into()).await?;
-    let serial_ap_author = serde_json::from_str::<crate::objects::person::Person>(&(author.1.ap_json.clone()).unwrap())?;
-    let serial_ap_followee = serde_json::from_str::<crate::objects::person::Person>(&(followee.1.ap_json.clone()).unwrap())?;
+    let serial_ap_author = serde_json::from_str::<crate::objects::person::Person>(
+        &(author.1.ap_json.clone()).unwrap(),
+    )?;
+    let serial_ap_followee = serde_json::from_str::<crate::objects::person::Person>(
+        &(followee.1.ap_json.clone()).unwrap(),
+    )?;
 
     let id = uuid::Uuid::now_v7().to_string();
 
     let followee_object: ObjectId<user::Model> = serial_ap_followee.url.into();
     let localuser_object: ObjectId<user::Model> = serial_ap_author.url.into();
 
-    println!("Sending follow request to {}", &followee.0.display_name.unwrap_or(followee.0.username));
+    println!(
+        "Sending follow request to {}",
+        &followee.0.display_name.unwrap_or(followee.0.username)
+    );
     let create = Follow {
         actor: localuser_object.clone(),
         object: followee_object.clone(),

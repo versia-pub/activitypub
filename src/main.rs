@@ -289,7 +289,10 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             .service(follow_manually)
             .route("/{user}", web::get().to(http_get_user))
             .route("/{user}/inbox", web::post().to(http_post_user_inbox))
-            .route("/apbridge/{user}/inbox", web::post().to(http_post_user_inbox))
+            .route(
+                "/apbridge/{user}/inbox",
+                web::post().to(http_post_user_inbox),
+            )
             .route("/.well-known/webfinger", web::get().to(webfinger))
             .service(index)
             .service(fetch_post)

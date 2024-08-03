@@ -88,8 +88,6 @@ async fn lysand_inbox(
     body: web::Bytes,
     state: web::Data<State>,
 ) -> actix_web::Result<HttpResponse, error::Error> {
-    
-
     Ok(HttpResponse::Created().finish())
 }
 
@@ -212,13 +210,16 @@ pub async fn lysand_url_to_user(url: Url) -> anyhow::Result<super::objects::User
     } else {
         target = ObjectId::<user::Model>::from(url)
             .dereference(&data.to_request_data())
-            .await.unwrap();
+            .await
+            .unwrap();
     }
 
     Ok(lysand_user_from_db(target).await?)
 }
 
-pub async fn lysand_url_to_user_and_model(url: Url) -> anyhow::Result<(super::objects::User, user::Model)> {
+pub async fn lysand_url_to_user_and_model(
+    url: Url,
+) -> anyhow::Result<(super::objects::User, user::Model)> {
     let db = DB.get().unwrap();
     let data = FEDERATION_CONFIG.get().unwrap();
 
@@ -232,7 +233,8 @@ pub async fn lysand_url_to_user_and_model(url: Url) -> anyhow::Result<(super::ob
     } else {
         target = ObjectId::<user::Model>::from(url)
             .dereference(&data.to_request_data())
-            .await.unwrap();
+            .await
+            .unwrap();
     }
 
     Ok((lysand_user_from_db(target.clone()).await?, target))
