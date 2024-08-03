@@ -11,14 +11,10 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::{
-    database::StateHandle,
-    entities::{
+    database::StateHandle, entities::{
         follow_relation::{self, Entity},
         post, prelude, user,
-    },
-    error,
-    utils::{generate_follow_accept_id, generate_random_object_id},
-    DB,
+    }, error, lysand::funcs::send_follow_accept_to_lysand, utils::{generate_follow_accept_id, generate_random_object_id}, DB
 };
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -195,6 +191,8 @@ async fn save_accept_follow(
     // modify db entry
     let res = prelude::FollowRelation::update(active_query);
     let model = res.exec(db).await?;
+
+    let _ = send_follow_accept_to_lysand(model.clone()).await?;
 
     Ok(model)
 }

@@ -14,7 +14,7 @@ use super::{
     superx::request_client,
 };
 
-async fn send_follow_accept_to_lysand(model: follow_relation::Model) -> anyhow::Result<()> {
+pub async fn send_follow_accept_to_lysand(model: follow_relation::Model) -> anyhow::Result<()> {
     let request_client = request_client();
     let db = DB.get().unwrap();
 
