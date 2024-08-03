@@ -164,9 +164,10 @@ impl Object for user::Model {
     ) -> Result<Option<Self>, Self::Error> {
         println!("!!!!!!!!Reading user from id!!!!!!!!!!!: {}", object_id);
         let res = entities::prelude::User::find()
-            .filter(entities::user::Column::Url.eq(object_id.as_str()))
+            .filter(entities::user::Column::Url.eq(object_id.to_string()))
             .one(data.database_connection.as_ref())
             .await?;
+        println!("!!!!!!!!Reading user from id!!!!!!!!!!!: {}", res.clone().is_some());
         Ok(res)
     }
 
