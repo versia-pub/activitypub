@@ -139,8 +139,19 @@ impl ActivityHandler for Accept {
 
     async fn receive(self, data: &Data<Self::DataType>) -> Result<(), Self::Error> {
         let user = self.actor.dereference(data).await?;
-        let follower = self.object.actor.dereference(data).await?;
-        save_accept_follow(user, follower, self).await?;
+        let follower_id;
+        let follower_bridge_url = self.object.actor.clone().to_string();
+        let split = follower_bridge_url.split("/").collect::<Vec<&str>>();
+        if split[split.len() - 1].is_empty() {
+            follower_id = split[split.len() - 2];
+        } else {
+            follower_id = split[split.len() - 1];
+        }
+        let follower = prelude::User::find()
+            .filter(user::Column::Id.eq(follower_id))
+            .one(data.database_connection.as_ref())
+            .await?;
+        save_accept_follow(user, follower.unwrap(), self).await?;
         Ok(())
     }
 }
