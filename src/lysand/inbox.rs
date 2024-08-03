@@ -87,8 +87,8 @@ async fn follow_request(follow: super::objects::Follow) -> Result<()> {
 
     let id = uuid::Uuid::now_v7().to_string();
 
-    let followee_object: ObjectId<user::Model> = serial_ap_followee.url.into();
-    let localuser_object: ObjectId<user::Model> = serial_ap_author.url.into();
+    let followee_object: ObjectId<user::Model> = serial_ap_followee.id;
+    let localuser_object: ObjectId<user::Model> = serial_ap_author.id;
 
     println!(
         "Sending follow request to {}",
