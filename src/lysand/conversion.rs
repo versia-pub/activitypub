@@ -207,7 +207,7 @@ pub async fn lysand_user_from_db(
     };
     let user = super::objects::User {
         rtype: super::objects::LysandType::User,
-        id: uuid::Uuid::try_parse(&user.id)?,
+        id: uuid::Uuid::parse_str(&user.id)?,
         uri: url.clone(),
         username: user.username,
         display_name,
