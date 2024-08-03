@@ -162,6 +162,7 @@ impl Object for user::Model {
         object_id: Url,
         data: &Data<Self::DataType>,
     ) -> Result<Option<Self>, Self::Error> {
+        println!("!!!!!!!!Reading user from id!!!!!!!!!!!: {}", object_id);
         let res = entities::prelude::User::find()
             .filter(entities::user::Column::Url.eq(object_id.as_str()))
             .one(data.database_connection.as_ref())
