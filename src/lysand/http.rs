@@ -25,6 +25,8 @@ use crate::{
     Response, API_DOMAIN, DB, FEDERATION_CONFIG,
 };
 
+use super::conversion::db_user_from_url;
+
 #[derive(serde::Deserialize)]
 struct LysandQuery {
     // Post url
@@ -213,10 +215,7 @@ pub async fn lysand_url_to_user(url: Url) -> anyhow::Result<super::objects::User
     if let Some(model) = opt_model {
         target = model;
     } else {
-        target = ObjectId::<user::Model>::from(url)
-            .dereference(&data.to_request_data())
-            .await
-            .unwrap();
+        target = db_user_from_url(url).await?;
     }
 
     Ok(lysand_user_from_db(target).await?)
@@ -236,10 +235,7 @@ pub async fn lysand_url_to_user_and_model(
     if let Some(model) = opt_model {
         target = model;
     } else {
-        target = ObjectId::<user::Model>::from(url)
-            .dereference(&data.to_request_data())
-            .await
-            .unwrap();
+        target = db_user_from_url(url).await?;
     }
 
     Ok((lysand_user_from_db(target.clone()).await?, target))
