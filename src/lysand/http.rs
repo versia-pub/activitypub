@@ -55,6 +55,7 @@ async fn query_post(
         let target =
             webfinger_resolve_actor::<State, user::Model>(user.as_str(), &data.to_request_data())
                 .await?;
+        println!("!!!!!!! DB USER GOT");
         let lysand_user = lysand_user_from_db(target).await?;
 
         return Ok(HttpResponse::Ok()
