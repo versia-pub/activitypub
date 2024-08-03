@@ -13,7 +13,7 @@ serde = { version = "1.0.130", features = ["derive", "rc"] }
 actix-web = "4"
 env_logger = "0.11.0"
 clap = { version = "4.3.14", features = ["derive"] }
-activitypub_federation = "0.5.2"
+activitypub_federation = "0.5.8"
 anyhow = "1.0.81"
 url = "2.5.0"
 rand = "0.8.5"
