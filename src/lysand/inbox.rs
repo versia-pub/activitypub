@@ -3,7 +3,7 @@ use crate::{
         self, follow_relation,
         prelude::{self, FollowRelation},
         user,
-    }, lysand::http::main_lysand_url_to_user_and_model, utils::generate_follow_req_id, DB, FEDERATION_CONFIG
+    }, lysand::http::main_lysand_url_to_user_and_model, utils::generate_follow_req_id, API_DOMAIN, DB, FEDERATION_CONFIG
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask, fetch::object_id::ObjectId, protocol::context::WithContext,
@@ -94,7 +94,7 @@ async fn follow_request(follow: super::objects::Follow) -> Result<()> {
         actor: localuser_object.clone(),
         object: followee_object.clone(),
         kind: FollowType::Follow,
-        id: generate_follow_req_id(data.domain(), id.clone().as_str())?,
+        id: generate_follow_req_id(&API_DOMAIN.to_string(), id.clone().as_str())?,
     };
 
     let ap_json = serde_json::to_string(&create)?;
