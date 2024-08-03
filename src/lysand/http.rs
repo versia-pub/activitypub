@@ -5,7 +5,7 @@ use activitypub_federation::{
     FEDERATION_CONTENT_TYPE,
 };
 use activitystreams_kinds::{activity::CreateType, object};
-use actix_web::{get, web, HttpResponse};
+use actix_web::{get, post, web, HttpResponse};
 use sea_orm::{query, ColumnTrait, EntityTrait, QueryFilter};
 use url::Url;
 
@@ -58,19 +58,7 @@ async fn query_post(
     }
 
     if let Some(user) = query.user_url.clone() {
-        let opt_model = prelude::User::find()
-            .filter(user::Column::Url.eq(user.as_str()))
-            .one(db)
-            .await?;
-        let target;
-        if let Some(model) = opt_model {
-            target = model;
-        } else {
-            target = ObjectId::<user::Model>::from(user)
-                .dereference(&data.to_request_data())
-                .await?;
-        }
-        let lysand_user = lysand_user_from_db(target).await?;
+        let lysand_user = lysand_url_to_user(user).await?;
 
         return Ok(HttpResponse::Ok()
             .content_type("application/json")
@@ -93,6 +81,16 @@ async fn query_post(
     Ok(HttpResponse::Ok()
         .content_type("application/json")
         .json(lysand_post_from_db(target).await?))
+}
+
+#[post("/apbridge/lysand/inbox")]
+async fn lysand_inbox(
+    body: web::Bytes,
+    state: web::Data<State>,
+) -> actix_web::Result<HttpResponse, error::Error> {
+    
+
+    Ok(HttpResponse::Created().finish())
 }
 
 #[get("/apbridge/object/{post}")]
@@ -198,4 +196,44 @@ async fn create_activity(
     Ok(HttpResponse::Ok()
         .content_type(FEDERATION_CONTENT_TYPE)
         .json(create_with_context))
+}
+
+pub async fn lysand_url_to_user(url: Url) -> anyhow::Result<super::objects::User> {
+    let db = DB.get().unwrap();
+    let data = FEDERATION_CONFIG.get().unwrap();
+
+    let opt_model = prelude::User::find()
+        .filter(user::Column::Url.eq(url.as_str()))
+        .one(db)
+        .await?;
+    let target;
+    if let Some(model) = opt_model {
+        target = model;
+    } else {
+        target = ObjectId::<user::Model>::from(url)
+            .dereference(&data.to_request_data())
+            .await.unwrap();
+    }
+
+    Ok(lysand_user_from_db(target).await?)
+}
+
+pub async fn lysand_url_to_user_and_model(url: Url) -> anyhow::Result<(super::objects::User, user::Model)> {
+    let db = DB.get().unwrap();
+    let data = FEDERATION_CONFIG.get().unwrap();
+
+    let opt_model = prelude::User::find()
+        .filter(user::Column::Url.eq(url.as_str()))
+        .one(db)
+        .await?;
+    let target;
+    if let Some(model) = opt_model {
+        target = model;
+    } else {
+        target = ObjectId::<user::Model>::from(url)
+            .dereference(&data.to_request_data())
+            .await.unwrap();
+    }
+
+    Ok((lysand_user_from_db(target.clone()).await?, target))
 }

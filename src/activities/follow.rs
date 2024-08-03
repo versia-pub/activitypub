@@ -6,13 +6,16 @@ use activitypub_federation::{
     traits::{ActivityHandler, Actor, Object},
 };
 use activitystreams_kinds::activity::{AcceptType, FollowType};
-use sea_orm::{ActiveModelTrait, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityOrSelect, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::{
     database::StateHandle,
-    entities::{follow_relation, post, user},
+    entities::{
+        follow_relation::{self, Entity},
+        post, prelude, user,
+    },
     error,
     utils::{generate_follow_accept_id, generate_random_object_id},
     DB,
@@ -20,11 +23,11 @@ use crate::{
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Follow {
-    actor: ObjectId<user::Model>,
-    object: ObjectId<user::Model>,
+    pub actor: ObjectId<user::Model>,
+    pub object: ObjectId<user::Model>,
     #[serde(rename = "type")]
-    kind: FollowType,
-    id: Url,
+    pub kind: FollowType,
+    pub id: Url,
 }
 
 impl Follow {
@@ -154,19 +157,21 @@ async fn accept_follow(
 }
 
 async fn save_follow(
-    local_user: user::Model,
+    followee: user::Model,
     follower: user::Model,
 ) -> Result<follow_relation::Model, crate::error::Error> {
-    let url = Url::parse(&follower.url)?;
-    let follow_relation = follow_relation::ActiveModel {
-        followee_id: Set(local_user.id.clone()),
-        follower_id: Set(follower.id.clone()),
-        followee_host: Set(None),
-        follower_host: Set(Some(url.host_str().unwrap().to_string())),
-        followee_inbox: Set(Some(local_user.inbox.clone())),
-        follower_inbox: Set(Some(follower.inbox.clone())),
-        ..Default::default()
-    };
-    let model = follow_relation.insert(DB.get().unwrap()).await?;
+    let db = DB.get().unwrap();
+    let query = prelude::FollowRelation::find()
+        .filter(follow_relation::Column::FollowerId.eq(follower.id.as_str()))
+        .filter(follow_relation::Column::FolloweeId.eq(followee.id.as_str()))
+        .one(db)
+        .await?;
+    if query.is_none() {
+        return Err(crate::error::Error(anyhow::anyhow!("oopsie woopise")));
+    }
+    // modify db entry
+    let res = prelude::FollowRelation::update(query.unwrap());
+    
+
     Ok(model)
 }

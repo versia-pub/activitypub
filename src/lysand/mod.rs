@@ -4,3 +4,4 @@ pub mod http;
 pub mod objects;
 pub mod superx;
 pub mod test;
+pub mod inbox;

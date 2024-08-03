@@ -141,8 +141,8 @@ async fn follow_manually(
         webfinger_resolve_actor::<State, user::Model>(path.as_str(), &data.to_request_data())
             .await?;
 
-    let followee_object: ObjectId<user::Model> = Url::parse(&followee.id)?.into();
-    let localuser_object: ObjectId<user::Model> = Url::parse(&local_user.id)?.into();
+    let followee_object: ObjectId<user::Model> = Url::parse(&followee.url)?.into();
+    let localuser_object: ObjectId<user::Model> = Url::parse(&local_user.url)?.into();
 
     Follow::send(
         localuser_object,
@@ -289,6 +289,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             .service(follow_manually)
             .route("/{user}", web::get().to(http_get_user))
             .route("/{user}/inbox", web::post().to(http_post_user_inbox))
+            .route("/apbridge/{user}/inbox", web::post().to(http_post_user_inbox))
             .route("/.well-known/webfinger", web::get().to(webfinger))
             .service(index)
             .service(fetch_post)

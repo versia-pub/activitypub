@@ -18,6 +18,10 @@ pub fn generate_follow_accept_id(domain: &str, db_id: &str) -> Result<Url, Parse
     Url::parse(&format!("https://{}/apbridge/follow/{}", domain, db_id))
 }
 
+pub fn generate_follow_req_id(domain: &str, db_id: &str) -> Result<Url, ParseError> {
+    Url::parse(&format!("https://{}/apbridge/followreq/{}", domain, db_id))
+}
+
 pub fn generate_lysand_post_url(domain: &str, db_id: &str) -> Result<Url, ParseError> {
     Url::parse(&format!(
         "https://{}/apbridge/lysand/object/{}",
