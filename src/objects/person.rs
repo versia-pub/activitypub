@@ -163,7 +163,7 @@ impl Object for user::Model {
         data: &Data<Self::DataType>,
     ) -> Result<Option<Self>, Self::Error> {
         let res = entities::prelude::User::find()
-            .filter(entities::user::Column::Id.eq(object_id.as_str()))
+            .filter(entities::user::Column::Url.eq(object_id.as_str()))
             .one(data.database_connection.as_ref())
             .await?;
         Ok(res)
