@@ -13,13 +13,15 @@ use crate::{
 use activitypub_federation::{
     actix_web::{inbox::receive_activity, signing_actor},
     config::{Data, FederationConfig, FederationMiddleware},
-    fetch::webfinger::{build_webfinger_response, extract_webfinger_name},
+    fetch::webfinger::{build_webfinger_response, extract_webfinger_name, WebFingerError},
     protocol::context::WithContext,
     traits::{Actor, Object},
     FEDERATION_CONTENT_TYPE,
 };
 use actix_web::{web, web::Bytes, App, HttpRequest, HttpResponse, HttpServer};
 use anyhow::anyhow;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use serde::Deserialize;
 use tracing::info;
 use url::Url;
@@ -106,7 +108,13 @@ pub async fn webfinger(
     query: web::Query<WebfingerQuery>,
     data: Data<StateHandle>,
 ) -> Result<HttpResponse, Error> {
-    let name = extract_webfinger_name(&query.resource, &data)?;
+    static WEBFINGER_REGEX: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"^acct:([\p{L}0-9_\.\-]+)@(.*)$").expect("compile regex"));
+    let captures = WEBFINGER_REGEX
+        .captures(&query.resource)
+        .ok_or(WebFingerError::WrongFormat)?;
+    let account_name = captures.get(1).ok_or(WebFingerError::WrongFormat)?;
+    let name = account_name.as_str();
     let user = local_db_user_from_name(name.to_string()).await?;
     Ok(HttpResponse::Ok().json(build_webfinger_response(
         query.resource.clone(),
