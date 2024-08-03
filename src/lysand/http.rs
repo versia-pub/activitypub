@@ -215,7 +215,10 @@ pub async fn lysand_url_to_user(url: Url) -> anyhow::Result<super::objects::User
     if let Some(model) = opt_model {
         target = model;
     } else {
-        target = db_user_from_url(url).await?;
+        target = ObjectId::<user::Model>::from(url)
+            .dereference(&data.to_request_data())
+            .await
+            .unwrap();
     }
 
     Ok(lysand_user_from_db(target).await?)
@@ -235,7 +238,7 @@ pub async fn lysand_url_to_user_and_model(
     if let Some(model) = opt_model {
         target = model;
     } else {
-        target = db_user_from_url(url).await?;
+        target = db_user_from_url(url.clone()).await?;
     }
 
     Ok((lysand_user_from_db(target.clone()).await?, target))
