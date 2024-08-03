@@ -288,7 +288,7 @@ pub async fn local_db_user_from_name(name: String) -> anyhow::Result<entities::u
 }
 
 pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model> {
-    print!("Fetching user from domain: {}", url.domain().unwrap());
+    println!("Fetching user from domain: {}", url.domain().unwrap());
     if !url.domain().eq(&Some(LYSAND_DOMAIN.as_str()))
         && !url.domain().eq(&Some(API_DOMAIN.as_str()))
     {
