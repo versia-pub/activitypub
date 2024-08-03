@@ -114,7 +114,7 @@ async fn follow_request(follow: super::objects::Follow) -> Result<()> {
 
     let sends = SendActivityTask::prepare(
         &create_with_context,
-        &data.local_user().await.unwrap(),
+        &author.1,
         vec![serial_ap_followee.inbox],
         &data.to_request_data(),
     )
