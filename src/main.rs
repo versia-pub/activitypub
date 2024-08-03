@@ -273,7 +273,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     labels.insert("name".to_string(), USERNAME.to_string());
     labels.insert("api_domain".to_string(), API_DOMAIN.to_string());
 
-    let prometheus = PrometheusMetricsBuilder::new("api")
+    let prometheus = PrometheusMetricsBuilder::new("activitypub_bridge")
         .endpoint("/metrics")
         .const_labels(labels)
         .build()
