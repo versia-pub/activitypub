@@ -167,7 +167,10 @@ impl Object for user::Model {
             .filter(entities::user::Column::Url.eq(object_id.to_string()))
             .one(data.database_connection.as_ref())
             .await?;
-        println!("!!!!!!!!Reading user from id!!!!!!!!!!!: {}", res.clone().is_some());
+        println!(
+            "!!!!!!!!Reading user from id!!!!!!!!!!!: {}",
+            res.clone().is_some()
+        );
         Ok(res)
     }
 

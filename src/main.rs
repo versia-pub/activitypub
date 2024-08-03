@@ -15,7 +15,9 @@ use clap::Parser;
 use database::Database;
 use entities::post;
 use http::{http_get_user, http_post_user_inbox, webfinger};
-use lysand::http::{create_activity, fetch_lysand_post, fetch_post, fetch_user, lysand_inbox, query_post};
+use lysand::http::{
+    create_activity, fetch_lysand_post, fetch_post, fetch_user, lysand_inbox, query_post,
+};
 use objects::person::{DbUser, Person};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};

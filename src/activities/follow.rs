@@ -11,10 +11,15 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::{
-    database::StateHandle, entities::{
+    database::StateHandle,
+    entities::{
         follow_relation::{self, Entity},
         post, prelude, user,
-    }, error, lysand::funcs::send_follow_accept_to_lysand, utils::{generate_follow_accept_id, generate_random_object_id}, DB
+    },
+    error,
+    lysand::funcs::send_follow_accept_to_lysand,
+    utils::{generate_follow_accept_id, generate_random_object_id},
+    DB,
 };
 
 #[derive(Deserialize, Serialize, Debug)]
