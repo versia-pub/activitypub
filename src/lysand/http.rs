@@ -231,7 +231,7 @@ pub async fn lysand_url_to_user_and_model(
     let data = FEDERATION_CONFIG.get().unwrap();
 
     let opt_model = prelude::User::find()
-        .filter(user::Column::Url.eq(url.as_str()))
+        .filter(user::Column::Url.eq(url.to_string()))
         .one(db)
         .await?;
     let target;

@@ -177,7 +177,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
     dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    let uuid = Uuid::now_v7();
+    let uuid = Uuid::parse_str("019116ea-3bf6-7ba3-b437-2cd7aaf40f80")?;
 
     let ap_id = Url::parse(&format!(
         "https://{}/apbridge/user/{}",
