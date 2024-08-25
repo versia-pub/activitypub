@@ -17,12 +17,9 @@
     inputs.flake-parts.lib.mkFlake { inherit inputs self; } {
       systems = import inputs.systems;
       flake = {
-        nixosModules = {
-          default = {
-            imports = [ ./module.nix ];
-            nixpkgs.overlays = [ self.overlays.default ];
-          };
-        };
+        hydraJobs = inputs.nixpkgs.lib.genAttrs [ "packages" "checks" "devShells" ] (attrs: {
+          inherit (self.${attrs}) x86_64-linux aarch64-linux;
+        });
       };
       imports = [
         inputs.treefmt-nix.flakeModule
@@ -50,15 +47,7 @@
             inherit (config.packages) lysand-ap-layer ls-ap-migration;
           };
           # Rust package
-          packages.default = naersk'.buildPackage {
-            inherit (cargoToml.package) name version;
-            src = ./.;
-            buildInputs = nonRustDeps;
-            nativeBuildInputs = with pkgs; [
-              rust-toolchain
-              pkg-config
-            ];
-          };
+          packages.default = config.packages.lysand-ap-layer;
           packages.lysand-ap-layer = naersk'.buildPackage {
             inherit (cargoToml.package) name version;
             src = ./.;
