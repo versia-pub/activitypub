@@ -13,6 +13,15 @@
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
+  nixConfig = {
+    extra-substituters = [
+      "https://cache.kyouma.net"
+    ];
+    extra-trusted-public-keys = [
+      "cache.kyouma.net:Frjwu4q1rnwE/MnSTmX9yx86GNA/z3p/oElGvucLiZg="
+    ];
+  };
+
   outputs = inputs@{ flake-parts, self, ... }:
     inputs.flake-parts.lib.mkFlake { inherit inputs self; } {
       systems = import inputs.systems;
