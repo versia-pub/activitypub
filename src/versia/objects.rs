@@ -72,25 +72,25 @@ pub enum VisibilityType {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum VersiaExtensions {
-    #[serde(rename = "org.versia:microblogging/Announce")]
+    #[serde(rename = "pub.versia:microblogging/Announce")]
     Announce,
-    #[serde(rename = "org.versia:custom_emojis")]
+    #[serde(rename = "pub.versia:custom_emojis")]
     CustomEmojis,
-    #[serde(rename = "org.versia:reactions/Reaction")]
+    #[serde(rename = "pub.versia:reactions/Reaction")]
     Reaction,
-    #[serde(rename = "org.versia:reactions")]
+    #[serde(rename = "pub.versia:reactions")]
     Reactions,
-    #[serde(rename = "org.versia:polls")]
+    #[serde(rename = "pub.versia:polls")]
     Polls,
-    #[serde(rename = "org.versia:is_cat")]
+    #[serde(rename = "pub.versia:is_cat")]
     IsCat,
-    #[serde(rename = "org.versia:server_endorsement/Endorsement")]
+    #[serde(rename = "pub.versia:server_endorsement/Endorsement")]
     Endorsement,
-    #[serde(rename = "org.versia:server_endorsement")]
+    #[serde(rename = "pub.versia:server_endorsement")]
     EndorsementCollection,
-    #[serde(rename = "org.versia:reports/Report")]
+    #[serde(rename = "pub.versia:reports/Report")]
     Report,
-    #[serde(rename = "org.versia:vanity")]
+    #[serde(rename = "pub.versia:vanity")]
     Vanity,
 }
 
@@ -284,7 +284,7 @@ pub struct User {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExtensionSpecs {
-    #[serde(rename = "org.versia:custom_emojis")]
+    #[serde(rename = "pub.versia:custom_emojis")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_emojis: Option<CustomEmojis>,
 }

@@ -87,24 +87,24 @@ pub async fn versia_user_from_db(
     let url = Url::parse(&user.url)?;
     let ap = user.ap_json.unwrap();
     let serialized_ap: crate::objects::person::Person = serde_json::from_str(&ap)?;
-    let inbox_url = Url::parse("https://ap.versia.social/apbridge/versia/inbox")?;
+    let inbox_url = Url::parse(&("https://".to_string() + &API_DOMAIN + "/apbridge/versia/inbox"))?;
     let outbox_url = Url::parse(
-        ("https://ap.versia.social/apbridge/versia/outbox/".to_string() + &user.id).as_str(),
+        ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/outbox/" + &user.id).as_str(),
     )?;
     let followers_url = Url::parse(
-        ("https://ap.versia.social/apbridge/versia/followers/".to_string() + &user.id).as_str(),
+        ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/followers/" + &user.id).as_str(),
     )?;
     let following_url = Url::parse(
-        ("https://ap.versia.social/apbridge/versia/following/".to_string() + &user.id).as_str(),
+        ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/following/" + &user.id).as_str(),
     )?;
     let featured_url = Url::parse(
-        ("https://ap.versia.social/apbridge/versia/featured/".to_string() + &user.id).as_str(),
+        ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/featured/" + &user.id).as_str(),
     )?;
     let likes_url = Url::parse(
-        ("https://ap.versia.social/apbridge/versia/likes/".to_string() + &user.id).as_str(),
+        ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/likes/" + &user.id).as_str(),
     )?;
     let dislikes_url = Url::parse(
-        ("https://ap.versia.social/apbridge/versia/dislikes/".to_string() + &user.id).as_str(),
+        ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/dislikes/" + &user.id).as_str(),
     )?;
     let og_displayname_ref = user.name.clone();
     let og_username_ref = user.username.clone();
@@ -256,7 +256,7 @@ pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model>
         Ok(post)
     } else {
         let post = fetch_note_from_url(url.clone()).await?;
-        let res = receive_versia_note(post, "https://ap.versia.social/example".to_string()).await?; // TODO: Replace user id with actual user id
+        let res = receive_versia_note(post, "https://".to_string() + &API_DOMAIN + "/example").await?; // TODO: Replace user id with actual user id
         Ok(res)
     }
 }

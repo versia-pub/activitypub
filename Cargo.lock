@@ -1930,44 +1930,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
-name = "versia-ap-layer"
-version = "0.1.0"
-dependencies = [
- "activitypub_federation",
- "activitystreams-kinds",
- "actix-web",
- "actix-web-prom",
- "anyhow",
- "async-recursion",
- "async-trait",
- "async_once",
- "base64-url",
- "chrono",
- "clap",
- "dotenv",
- "enum_delegate",
- "env_logger",
- "lazy_static",
- "num_cpus",
- "once_cell",
- "rand",
- "regex",
- "reqwest 0.12.5",
- "sea-orm",
- "serde",
- "serde_derive",
- "serde_json",
- "thiserror",
- "time",
- "tokio",
- "tracing",
- "url",
- "uuid",
- "vcpkg",
- "webfinger",
-]
-
-[[package]]
 name = "matchit"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3915,6 +3877,44 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
+
+[[package]]
+name = "versia-ap-layer"
+version = "0.1.0"
+dependencies = [
+ "activitypub_federation",
+ "activitystreams-kinds",
+ "actix-web",
+ "actix-web-prom",
+ "anyhow",
+ "async-recursion",
+ "async-trait",
+ "async_once",
+ "base64-url",
+ "chrono",
+ "clap",
+ "dotenv",
+ "enum_delegate",
+ "env_logger",
+ "lazy_static",
+ "num_cpus",
+ "once_cell",
+ "rand",
+ "regex",
+ "reqwest 0.12.5",
+ "sea-orm",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
+ "url",
+ "uuid",
+ "vcpkg",
+ "webfinger",
+]
 
 [[package]]
 name = "version_check"
