@@ -15,8 +15,8 @@ use clap::Parser;
 use database::Database;
 use entities::post;
 use http::{http_get_user, http_post_user_inbox, webfinger};
-use lysand::http::{
-    create_activity, fetch_lysand_post, fetch_post, fetch_user, lysand_inbox, query_post,
+use versia::http::{
+    create_activity, fetch_versia_post, fetch_post, fetch_user, versia_inbox, query_post,
 };
 use objects::person::{DbUser, Person};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
@@ -47,7 +47,7 @@ mod database;
 mod entities;
 mod error;
 mod http;
-mod lysand;
+mod versia;
 mod objects;
 mod utils;
 
@@ -157,7 +157,7 @@ async fn follow_manually(
     Ok(HttpResponse::Ok().json(Response { health: true }))
 }
 
-const DOMAIN_DEF: &str = "social.lysand.org";
+const DOMAIN_DEF: &str = "versia.social";
 const LOCAL_USER_NAME: &str = "apservice";
 
 lazy_static! {
@@ -288,7 +288,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             .wrap(prometheus.clone())
             .wrap(FederationMiddleware::new(data.clone()))
             .service(post_manually)
-            .service(lysand_inbox)
+            .service(versia_inbox)
             .service(follow_manually)
             .route("/{user}", web::get().to(http_get_user))
             .route("/{user}/inbox", web::post().to(http_post_user_inbox))
@@ -302,7 +302,7 @@ async fn main() -> actix_web::Result<(), anyhow::Error> {
             .service(fetch_user)
             .service(create_activity)
             .service(query_post)
-            .service(fetch_lysand_post)
+            .service(fetch_versia_post)
     })
     .bind(SERVER_URL.to_string())?
     .workers(num_cpus::get())

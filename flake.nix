@@ -53,11 +53,11 @@
         in
         {
           overlayAttrs = {
-            inherit (config.packages) lysand-ap-layer ls-ap-migration;
+            inherit (config.packages) versia-ap-layer ls-ap-migration;
           };
           # Rust package
-          packages.default = config.packages.lysand-ap-layer;
-          packages.lysand-ap-layer = naersk'.buildPackage {
+          packages.default = config.packages.versia-ap-layer;
+          packages.versia-ap-layer = naersk'.buildPackage {
             inherit (cargoToml.package) name version;
             src = ./.;
             buildInputs = nonRustDeps;
@@ -77,10 +77,10 @@
           };
           packages.ociImage = pkgs.dockerTools.buildLayeredImage
             {
-              name = "ghcr.io/lysand-org/activitypub";
+              name = "ghcr.io/versia-pub/activitypub";
               tag = "main";
               contents = [
-                config.packages.lysand-ap-layer
+                config.packages.versia-ap-layer
                 config.packages.ls-ap-migration
                 pkgs.bash
               ];
@@ -90,7 +90,7 @@
                   "${config.packages.ls-ap-migration}/bin/ls-ap-migration"
                   "up"
                   "&&"
-                  "${config.packages.lysand-ap-layer}/bin/lysand-ap-layer"
+                  "${config.packages.versia-ap-layer}/bin/versia-ap-layer"
                 ];
                 ExposedPorts = {
                   "8080/tcp" = { };

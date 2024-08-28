@@ -22,7 +22,7 @@ const FORMAT: Iso8601<6651332276412969266533270467398074368> = Iso8601::<
             .encode()
     },
 >;
-time::serde::format_description!(iso_lysand, OffsetDateTime, FORMAT);
+time::serde::format_description!(iso_versia, OffsetDateTime, FORMAT);
 
 fn sort_alphabetically<T: Serialize, S: serde::Serializer>(
     value: &T,
@@ -36,7 +36,7 @@ fn sort_alphabetically<T: Serialize, S: serde::Serializer>(
 pub struct SortAlphabetically<T: Serialize>(#[serde(serialize_with = "sort_alphabetically")] pub T);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum LysandType {
+pub enum VersiaType {
     User,
     Note,
     Patch,
@@ -71,26 +71,26 @@ pub enum VisibilityType {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum LysandExtensions {
-    #[serde(rename = "org.lysand:microblogging/Announce")]
+pub enum VersiaExtensions {
+    #[serde(rename = "org.versia:microblogging/Announce")]
     Announce,
-    #[serde(rename = "org.lysand:custom_emojis")]
+    #[serde(rename = "org.versia:custom_emojis")]
     CustomEmojis,
-    #[serde(rename = "org.lysand:reactions/Reaction")]
+    #[serde(rename = "org.versia:reactions/Reaction")]
     Reaction,
-    #[serde(rename = "org.lysand:reactions")]
+    #[serde(rename = "org.versia:reactions")]
     Reactions,
-    #[serde(rename = "org.lysand:polls")]
+    #[serde(rename = "org.versia:polls")]
     Polls,
-    #[serde(rename = "org.lysand:is_cat")]
+    #[serde(rename = "org.versia:is_cat")]
     IsCat,
-    #[serde(rename = "org.lysand:server_endorsement/Endorsement")]
+    #[serde(rename = "org.versia:server_endorsement/Endorsement")]
     Endorsement,
-    #[serde(rename = "org.lysand:server_endorsement")]
+    #[serde(rename = "org.versia:server_endorsement")]
     EndorsementCollection,
-    #[serde(rename = "org.lysand:reports/Report")]
+    #[serde(rename = "org.versia:reports/Report")]
     Report,
-    #[serde(rename = "org.lysand:vanity")]
+    #[serde(rename = "org.versia:vanity")]
     Vanity,
 }
 
@@ -254,10 +254,10 @@ impl ContentEntry {
 pub struct User {
     pub public_key: PublicKey,
     #[serde(rename = "type")]
-    pub rtype: LysandType,
+    pub rtype: VersiaType,
     pub id: Uuid,
     pub uri: Url,
-    #[serde(with = "iso_lysand")]
+    #[serde(with = "iso_versia")]
     pub created_at: OffsetDateTime,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
@@ -284,7 +284,7 @@ pub struct User {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExtensionSpecs {
-    #[serde(rename = "org.lysand:custom_emojis")]
+    #[serde(rename = "org.versia:custom_emojis")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_emojis: Option<CustomEmojis>,
 }
@@ -321,11 +321,11 @@ pub struct LinkPreview {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Note {
     #[serde(rename = "type")]
-    pub rtype: LysandType,
+    pub rtype: VersiaType,
     pub id: Uuid,
     pub uri: Url,
     pub author: Url,
-    #[serde(with = "iso_lysand")]
+    #[serde(with = "iso_versia")]
     pub created_at: OffsetDateTime,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<CategoryType>,
@@ -357,13 +357,13 @@ pub struct Note {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Patch {
     #[serde(rename = "type")]
-    pub rtype: LysandType,
+    pub rtype: VersiaType,
     pub id: Uuid,
     pub uri: Url,
     pub author: Url,
-    #[serde(with = "iso_lysand")]
+    #[serde(with = "iso_versia")]
     pub created_at: OffsetDateTime,
-    #[serde(with = "iso_lysand")]
+    #[serde(with = "iso_versia")]
     pub patched_at: OffsetDateTime,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<CategoryType>,
@@ -406,11 +406,11 @@ pub struct Outbox {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Follow {
     #[serde(rename = "type")]
-    pub rtype: LysandType,
+    pub rtype: VersiaType,
     pub id: Uuid,
     pub uri: Url,
     pub author: Url,
-    #[serde(with = "iso_lysand")]
+    #[serde(with = "iso_versia")]
     pub created_at: OffsetDateTime,
     pub followee: Url,
 }
@@ -418,11 +418,11 @@ pub struct Follow {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FollowResult {
     #[serde(rename = "type")]
-    pub rtype: LysandType,
+    pub rtype: VersiaType,
     pub id: Uuid,
     pub uri: Url,
     pub author: Url,
-    #[serde(with = "iso_lysand")]
+    #[serde(with = "iso_versia")]
     pub created_at: OffsetDateTime,
     pub follower: Url,
 }

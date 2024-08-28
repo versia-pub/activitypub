@@ -2,9 +2,9 @@ use crate::{
     database::StateHandle,
     entities::user,
     error::Error,
-    lysand::{
+    versia::{
         self,
-        conversion::{db_user_from_url, local_db_user_from_name, receive_lysand_note},
+        conversion::{db_user_from_url, local_db_user_from_name, receive_versia_note},
     },
     objects::person::{DbUser, PersonAcceptedActivities},
     utils::generate_user_id,
@@ -45,12 +45,12 @@ pub fn listen(config: &FederationConfig<StateHandle>) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn lysand_inbox(
-    note: web::Json<lysand::objects::Note>,
+pub fn versia_inbox(
+    note: web::Json<versia::objects::Note>,
     id: web::Path<String>,
     data: Data<StateHandle>,
 ) -> Result<HttpResponse, Error> {
-    tokio::spawn(receive_lysand_note(note.into_inner(), id.into_inner()));
+    tokio::spawn(receive_versia_note(note.into_inner(), id.into_inner()));
     Ok(HttpResponse::Created().finish())
 }
 

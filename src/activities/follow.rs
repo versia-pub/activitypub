@@ -17,7 +17,7 @@ use crate::{
         post, prelude, user,
     },
     error,
-    lysand::funcs::send_follow_accept_to_lysand,
+    versia::funcs::send_follow_accept_to_versia,
     utils::{generate_follow_accept_id, generate_random_object_id},
     DB,
 };
@@ -116,7 +116,7 @@ impl ActivityHandler for Follow {
     }
 
     async fn receive(self, data: &Data<Self::DataType>) -> Result<(), Self::Error> {
-        //accept_follow(self, data).await?; TODO replace w/ lysand forward
+        //accept_follow(self, data).await?; TODO replace w/ versia forward
         Ok(())
     }
 }
@@ -184,20 +184,20 @@ async fn save_accept_follow(
     if query.is_none() {
         return Err(crate::error::Error(anyhow::anyhow!("oopsie woopise")));
     }
-    let lysand_accept_id = uuid::Uuid::now_v7().to_string();
+    let versia_accept_id = uuid::Uuid::now_v7().to_string();
     // all values in the ActiveModel that are set, except the id, will be updated
     let active_query = follow_relation::ActiveModel {
         id: Set(query.unwrap().id),
         ap_accept_id: Set(Some(accept_activity.id.to_string())),
         ap_accept_json: Set(Some(serde_json::to_string(&accept_activity).unwrap())),
-        accept_id: Set(Some(lysand_accept_id)),
+        accept_id: Set(Some(versia_accept_id)),
         ..Default::default()
     };
     // modify db entry
     let res = prelude::FollowRelation::update(active_query);
     let model = res.exec(db).await?;
 
-    let _ = send_follow_accept_to_lysand(model.clone()).await?;
+    let _ = send_follow_accept_to_versia(model.clone()).await?;
 
     Ok(model)
 }

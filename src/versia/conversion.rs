@@ -17,7 +17,7 @@ use crate::{
         person::{AttachmentType, EndpointType, IconType, Person, TagType},
         post::Mention,
     },
-    utils::{generate_lysand_post_url, generate_object_id, generate_user_id},
+    utils::{generate_versia_post_url, generate_object_id, generate_user_id},
     API_DOMAIN, DB, FEDERATION_CONFIG, LOCAL_USER_NAME, LYSAND_DOMAIN, USERNAME,
 };
 
@@ -32,12 +32,12 @@ pub async fn fetch_user_from_url(url: Url) -> anyhow::Result<super::objects::Use
     Ok(request.json::<super::objects::User>().await?)
 }
 
-pub async fn lysand_post_from_db(
+pub async fn versia_post_from_db(
     post: entities::post::Model,
 ) -> anyhow::Result<super::objects::Note> {
     let data = FEDERATION_CONFIG.get().unwrap();
     let domain = data.domain();
-    let url = generate_lysand_post_url(domain, &post.id)?;
+    let url = generate_versia_post_url(domain, &post.id)?;
     let creator = prelude::User::find()
         .filter(entities::user::Column::Id.eq(post.creator.clone()))
         .one(DB.get().unwrap())
@@ -60,7 +60,7 @@ pub async fn lysand_post_from_db(
         ContentEntry::from_string(post.content),
     );
     let note = super::objects::Note {
-        rtype: super::objects::LysandType::Note,
+        rtype: super::objects::VersiaType::Note,
         id: uuid::Uuid::parse_str(&post.id)?,
         author: author.clone(),
         uri: url.clone(),
@@ -81,30 +81,30 @@ pub async fn lysand_post_from_db(
     Ok(note)
 }
 
-pub async fn lysand_user_from_db(
+pub async fn versia_user_from_db(
     user: entities::user::Model,
 ) -> anyhow::Result<super::objects::User> {
     let url = Url::parse(&user.url)?;
     let ap = user.ap_json.unwrap();
     let serialized_ap: crate::objects::person::Person = serde_json::from_str(&ap)?;
-    let inbox_url = Url::parse("https://ap.lysand.org/apbridge/lysand/inbox")?;
+    let inbox_url = Url::parse("https://ap.versia.social/apbridge/versia/inbox")?;
     let outbox_url = Url::parse(
-        ("https://ap.lysand.org/apbridge/lysand/outbox/".to_string() + &user.id).as_str(),
+        ("https://ap.versia.social/apbridge/versia/outbox/".to_string() + &user.id).as_str(),
     )?;
     let followers_url = Url::parse(
-        ("https://ap.lysand.org/apbridge/lysand/followers/".to_string() + &user.id).as_str(),
+        ("https://ap.versia.social/apbridge/versia/followers/".to_string() + &user.id).as_str(),
     )?;
     let following_url = Url::parse(
-        ("https://ap.lysand.org/apbridge/lysand/following/".to_string() + &user.id).as_str(),
+        ("https://ap.versia.social/apbridge/versia/following/".to_string() + &user.id).as_str(),
     )?;
     let featured_url = Url::parse(
-        ("https://ap.lysand.org/apbridge/lysand/featured/".to_string() + &user.id).as_str(),
+        ("https://ap.versia.social/apbridge/versia/featured/".to_string() + &user.id).as_str(),
     )?;
     let likes_url = Url::parse(
-        ("https://ap.lysand.org/apbridge/lysand/likes/".to_string() + &user.id).as_str(),
+        ("https://ap.versia.social/apbridge/versia/likes/".to_string() + &user.id).as_str(),
     )?;
     let dislikes_url = Url::parse(
-        ("https://ap.lysand.org/apbridge/lysand/dislikes/".to_string() + &user.id).as_str(),
+        ("https://ap.versia.social/apbridge/versia/dislikes/".to_string() + &user.id).as_str(),
     )?;
     let og_displayname_ref = user.name.clone();
     let og_username_ref = user.username.clone();
@@ -206,7 +206,7 @@ pub async fn lysand_user_from_db(
         custom_emojis: emojis,
     };
     let user = super::objects::User {
-        rtype: super::objects::LysandType::User,
+        rtype: super::objects::VersiaType::User,
         id: uuid::Uuid::parse_str(&user.id)?,
         uri: url.clone(),
         username: user.username,
@@ -244,7 +244,7 @@ pub async fn option_content_format_text(opt: Option<ContentFormat>) -> Option<St
 #[async_recursion]
 pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model> {
     if !url.domain().eq(&Some(LYSAND_DOMAIN.as_str())) {
-        return Err(anyhow!("not lysands domain"));
+        return Err(anyhow!("not versias domain"));
     }
     let str_url = url.to_string();
     let post_res: Option<post::Model> = prelude::Post::find()
@@ -256,7 +256,7 @@ pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model>
         Ok(post)
     } else {
         let post = fetch_note_from_url(url.clone()).await?;
-        let res = receive_lysand_note(post, "https://ap.lysand.org/example".to_string()).await?; // TODO: Replace user id with actual user id
+        let res = receive_versia_note(post, "https://ap.versia.social/example".to_string()).await?; // TODO: Replace user id with actual user id
         Ok(res)
     }
 }
@@ -292,7 +292,7 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
     if !url.domain().eq(&Some(LYSAND_DOMAIN.as_str()))
         && !url.domain().eq(&Some(API_DOMAIN.as_str()))
     {
-        return Err(anyhow!("not lysands domain"));
+        return Err(anyhow!("not versias domain"));
     }
     let user_res: Option<user::Model> = prelude::User::find()
         .filter(entities::user::Column::Url.eq(url.to_string()))
@@ -434,11 +434,11 @@ pub async fn fetch_note_from_url(url: Url) -> anyhow::Result<super::objects::Not
     Ok(request.json::<super::objects::Note>().await?)
 }
 #[async_recursion]
-pub async fn receive_lysand_note(
+pub async fn receive_versia_note(
     note: Note,
     db_id: String,
 ) -> anyhow::Result<entities::post::Model> {
-    let lysand_author: entities::user::Model = db_user_from_url(note.author.clone()).await?;
+    let versia_author: entities::user::Model = db_user_from_url(note.author.clone()).await?;
     let user_res = prelude::User::find_by_id(db_id)
         .one(DB.get().unwrap())
         .await;
@@ -559,7 +559,7 @@ pub async fn receive_lysand_note(
         }
         let post = entities::post::ActiveModel {
             id: Set(note.id.to_string()),
-            creator: Set(lysand_author.id.clone()),
+            creator: Set(versia_author.id.clone()),
             content: Set(ap_note.content.clone()),
             sensitive: Set(ap_note.sensitive.unwrap_or_default()),
             created_at: Set(Utc

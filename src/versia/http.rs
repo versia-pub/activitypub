@@ -16,8 +16,8 @@ use crate::{
         prelude, user,
     },
     error,
-    lysand::{
-        conversion::{lysand_post_from_db, lysand_user_from_db},
+    versia::{
+        conversion::{versia_post_from_db, versia_user_from_db},
         inbox::inbox_entry,
     },
     objects::{self, person::Person},
@@ -28,7 +28,7 @@ use crate::{
 use super::conversion::db_user_from_url;
 
 #[derive(serde::Deserialize)]
-struct LysandQuery {
+struct VersiaQuery {
     // Post url
     url: Option<Url>,
     // User handle
@@ -37,9 +37,9 @@ struct LysandQuery {
     user_url: Option<Url>,
 }
 
-#[get("/apbridge/lysand/query")]
+#[get("/apbridge/versia/query")]
 async fn query_post(
-    query: web::Query<LysandQuery>,
+    query: web::Query<VersiaQuery>,
     state: web::Data<State>,
 ) -> actix_web::Result<HttpResponse, error::Error> {
     if query.url.is_none() && query.user.is_none() && query.user_url.is_none() {
@@ -56,19 +56,19 @@ async fn query_post(
             webfinger_resolve_actor::<State, user::Model>(user.as_str(), &data.to_request_data())
                 .await?;
         println!("!!!!!!! DB USER GOT");
-        let lysand_user = lysand_user_from_db(target).await?;
+        let versia_user = versia_user_from_db(target).await?;
 
         return Ok(HttpResponse::Ok()
             .content_type("application/json")
-            .json(lysand_user));
+            .json(versia_user));
     }
 
     if let Some(user) = query.user_url.clone() {
-        let lysand_user = lysand_url_to_user(user).await?;
+        let versia_user = versia_url_to_user(user).await?;
 
         return Ok(HttpResponse::Ok()
             .content_type("application/json")
-            .json(lysand_user));
+            .json(versia_user));
     }
 
     let opt_model = prelude::Post::find()
@@ -86,11 +86,11 @@ async fn query_post(
 
     Ok(HttpResponse::Ok()
         .content_type("application/json")
-        .json(lysand_post_from_db(target).await?))
+        .json(versia_post_from_db(target).await?))
 }
 
-#[post("/apbridge/lysand/inbox")]
-async fn lysand_inbox(
+#[post("/apbridge/versia/inbox")]
+async fn versia_inbox(
     body: web::Bytes,
     state: web::Data<State>,
 ) -> actix_web::Result<HttpResponse, error::Error> {
@@ -145,8 +145,8 @@ async fn fetch_user(
         .json(WithContext::new_default(deserialized_user)))
 }
 
-#[get("/apbridge/lysand/object/{post}")]
-async fn fetch_lysand_post(
+#[get("/apbridge/versia/object/{post}")]
+async fn fetch_versia_post(
     path: web::Path<String>,
     state: web::Data<State>,
 ) -> actix_web::Result<HttpResponse, error::Error> {
@@ -164,7 +164,7 @@ async fn fetch_lysand_post(
 
     Ok(HttpResponse::Ok()
         .content_type("application/json")
-        .json(lysand_post_from_db(post).await?))
+        .json(versia_post_from_db(post).await?))
 }
 
 #[get("/apbridge/create/{id}/{base64url}")]
@@ -204,7 +204,7 @@ async fn create_activity(
         .json(create_with_context))
 }
 
-pub async fn lysand_url_to_user(url: Url) -> anyhow::Result<super::objects::User> {
+pub async fn versia_url_to_user(url: Url) -> anyhow::Result<super::objects::User> {
     let db = DB.get().unwrap();
     let data = FEDERATION_CONFIG.get().unwrap();
 
@@ -222,10 +222,10 @@ pub async fn lysand_url_to_user(url: Url) -> anyhow::Result<super::objects::User
             .unwrap();
     }
 
-    Ok(lysand_user_from_db(target).await?)
+    Ok(versia_user_from_db(target).await?)
 }
 
-pub async fn lysand_url_to_user_and_model(
+pub async fn versia_url_to_user_and_model(
     url: Url,
 ) -> anyhow::Result<(super::objects::User, user::Model)> {
     let db = DB.get().unwrap();
@@ -245,10 +245,10 @@ pub async fn lysand_url_to_user_and_model(
             .unwrap();
     }
 
-    Ok((lysand_user_from_db(target.clone()).await?, target))
+    Ok((versia_user_from_db(target.clone()).await?, target))
 }
 
-pub async fn main_lysand_url_to_user_and_model(
+pub async fn main_versia_url_to_user_and_model(
     url: Url,
 ) -> anyhow::Result<(super::objects::User, user::Model)> {
     let db = DB.get().unwrap();
@@ -265,5 +265,5 @@ pub async fn main_lysand_url_to_user_and_model(
         target = db_user_from_url(url.clone()).await?;
     }
 
-    Ok((lysand_user_from_db(target.clone()).await?, target))
+    Ok((versia_user_from_db(target.clone()).await?, target))
 }

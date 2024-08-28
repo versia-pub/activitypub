@@ -1,11 +1,11 @@
 [package]
-name = "lysand-ap-layer"
+name = "versia-ap-layer"
 version = "0.1.0"
 edition = "2021"
 authors = ["April John <aprl@acab.dev>"]
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/lysand-org/lysand-ap-layer"
-description = "A compatibility layer between lysands official server and activitypub"
+repository = "https://github.com/versia-pub/versia-ap-layer"
+description = "A compatibility layer between versias official server and activitypub"
 
 [dependencies]
 tokio = { version = "1.20.0", features = ["rt", "macros"] }

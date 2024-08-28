@@ -10,15 +10,15 @@ pub async fn serialize_user(user: super::objects::User) -> anyhow::Result<String
     Ok(data)
 }
 
-pub async fn deserialize_lysand_type(data: String) -> anyhow::Result<super::objects::LysandType> {
-    let lysand_type: super::objects::LysandType = serde_json::from_str(&data)?;
-    Ok(lysand_type)
+pub async fn deserialize_versia_type(data: String) -> anyhow::Result<super::objects::VersiaType> {
+    let versia_type: super::objects::VersiaType = serde_json::from_str(&data)?;
+    Ok(versia_type)
 }
 
-pub async fn serialize_lysand_type(
-    lysand_type: super::objects::LysandType,
+pub async fn serialize_versia_type(
+    versia_type: super::objects::VersiaType,
 ) -> anyhow::Result<String> {
-    let data = serde_json::to_string(&lysand_type)?;
+    let data = serde_json::to_string(&versia_type)?;
     Ok(data)
 }
 

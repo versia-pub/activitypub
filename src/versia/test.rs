@@ -1,4 +1,4 @@
-use crate::lysand::objects::SortAlphabetically;
+use crate::versia::objects::SortAlphabetically;
 
 use super::superx::request_client;
 
@@ -6,7 +6,7 @@ use super::superx::request_client;
 async fn test_user_serial() {
     let client = request_client();
     let response = client
-        .get("https://social.lysand.org/users/018ec082-0ae1-761c-b2c5-22275a611771")
+        .get("https://versia.social/users/018ec082-0ae1-761c-b2c5-22275a611771")
         .send()
         .await
         .unwrap();
@@ -25,7 +25,7 @@ pub async fn main() -> anyhow::Result<()> {
 
     println!("Requesting user");
     let response = client
-        .get("https://social.lysand.org/users/018ec082-0ae1-761c-b2c5-22275a611771")
+        .get("https://versia.social/users/018ec082-0ae1-761c-b2c5-22275a611771")
         .send()
         .await?;
     println!("Response: {:?}", response);
@@ -50,9 +50,9 @@ pub async fn main() -> anyhow::Result<()> {
 
     println!("\n\n\nas AP:");
     for item in outbox.items {
-        let ap_item = super::conversion::receive_lysand_note(
+        let ap_item = super::conversion::receive_versia_note(
             item,
-            "https://ap.lysand.org/example".to_string(),
+            "https://ap.versia.social/example".to_string(),
         )
         .await?;
         println!("{:#?}", ap_item);

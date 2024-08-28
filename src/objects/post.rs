@@ -3,7 +3,7 @@ use crate::{
     database::StateHandle,
     entities::{post, user},
     error::Error,
-    lysand::conversion::db_user_from_url,
+    versia::conversion::db_user_from_url,
     objects::person::DbUser,
     utils::generate_object_id,
 };

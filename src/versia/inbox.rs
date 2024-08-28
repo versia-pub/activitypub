@@ -5,7 +5,7 @@ use crate::{
         prelude::{self, FollowRelation},
         user,
     },
-    lysand::http::main_lysand_url_to_user_and_model,
+    versia::http::main_versia_url_to_user_and_model,
     utils::generate_follow_req_id,
     API_DOMAIN, DB, FEDERATION_CONFIG,
 };
@@ -19,9 +19,9 @@ use serde::Deserialize;
 use url::Url;
 
 use super::{
-    conversion::lysand_user_from_db,
-    http::{lysand_url_to_user, lysand_url_to_user_and_model},
-    objects::LysandType,
+    conversion::versia_user_from_db,
+    http::{versia_url_to_user, versia_url_to_user_and_model},
+    objects::VersiaType,
 };
 
 pub async fn inbox_entry(json: &str) -> Result<()> {
@@ -30,7 +30,7 @@ pub async fn inbox_entry(json: &str) -> Result<()> {
 
     // Extract the "type" field from the JSON
     if let Some(json_type) = value.get("type") {
-        // Match the "type" field with the corresponding LysandType
+        // Match the "type" field with the corresponding VersiaType
         match json_type.as_str() {
             Some("Note") => {
                 let note: super::objects::Note = serde_json::from_str(json)?;
@@ -76,9 +76,9 @@ async fn follow_request(follow: super::objects::Follow) -> Result<()> {
         ));
     }
     let data = FEDERATION_CONFIG.get().unwrap();
-    let author = main_lysand_url_to_user_and_model(follow.author.into()).await?;
+    let author = main_versia_url_to_user_and_model(follow.author.into()).await?;
     println!("Followee URL: {}", &follow.followee.to_string());
-    let followee = lysand_url_to_user_and_model(follow.followee.into()).await?;
+    let followee = versia_url_to_user_and_model(follow.followee.into()).await?;
     let serial_ap_author = serde_json::from_str::<crate::objects::person::Person>(
         &(author.1.ap_json.clone()).unwrap(),
     )?;

@@ -22,9 +22,9 @@ pub fn generate_follow_req_id(domain: &str, db_id: &str) -> Result<Url, ParseErr
     Url::parse(&format!("https://{}/apbridge/followreq/{}", domain, db_id))
 }
 
-pub fn generate_lysand_post_url(domain: &str, db_id: &str) -> Result<Url, ParseError> {
+pub fn generate_versia_post_url(domain: &str, db_id: &str) -> Result<Url, ParseError> {
     Url::parse(&format!(
-        "https://{}/apbridge/lysand/object/{}",
+        "https://{}/apbridge/versia/object/{}",
         domain, db_id
     ))
 }
