@@ -242,8 +242,10 @@ pub struct User {
     pub display_name: Option<String>,
     pub collections: UserCollections,
     pub inbox: Url,
-    pub likes: Url,
-    pub dislikes: Url,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub likes: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dislikes: Option<Url>,
     pub username: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bio: Option<ContentFormat>,
