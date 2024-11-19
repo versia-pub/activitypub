@@ -21,7 +21,6 @@ use url::Url;
 use super::{
     conversion::versia_user_from_db,
     http::{versia_url_to_user, versia_url_to_user_and_model},
-    objects::VersiaType,
 };
 
 pub async fn inbox_entry(json: &str) -> Result<()> {
@@ -35,9 +34,6 @@ pub async fn inbox_entry(json: &str) -> Result<()> {
             Some("Note") => {
                 let note: super::objects::Note = serde_json::from_str(json)?;
             }
-            Some("Patch") => {
-                let patch: super::objects::Patch = serde_json::from_str(json)?;
-            }
             Some("Follow") => {
                 let follow_req: super::objects::Follow = serde_json::from_str(json)?;
                 follow_request(follow_req).await?;
@@ -47,6 +43,9 @@ pub async fn inbox_entry(json: &str) -> Result<()> {
             }
             Some("FollowReject") => {
                 let follow_rej: super::objects::FollowResult = serde_json::from_str(json)?;
+            }
+            Some("Unfollow") => {
+                let unfollow: super::objects::Unfollow = serde_json::from_str(json)?;
             }
             // Add more cases for other types as needed
             _ => {

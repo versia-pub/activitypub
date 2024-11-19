@@ -36,21 +36,6 @@ fn sort_alphabetically<T: Serialize, S: serde::Serializer>(
 pub struct SortAlphabetically<T: Serialize>(#[serde(serialize_with = "sort_alphabetically")] pub T);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum VersiaType {
-    User,
-    Note,
-    Patch,
-    Like,
-    Dislike,
-    Follow,
-    FollowAccept,
-    FollowReject,
-    Undo,
-    Extension,
-    ServerMetadata,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum CategoryType {
     Microblog,
     Forum,
@@ -62,18 +47,9 @@ pub enum CategoryType {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "snake_case")]
-pub enum VisibilityType {
-    Public,
-    Unlisted,
-    Followers,
-    Direct,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum VersiaExtensions {
-    #[serde(rename = "pub.versia:microblogging/Announce")]
-    Announce,
+    #[serde(rename = "pub.versia:share/Share")]
+    Share,
     #[serde(rename = "pub.versia:custom_emojis")]
     CustomEmojis,
     #[serde(rename = "pub.versia:reactions/Reaction")]
@@ -96,8 +72,9 @@ pub enum VersiaExtensions {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PublicKey {
-    pub public_key: String,
+    pub key: String,
     pub actor: Url,
+    pub algorithm: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -217,6 +194,7 @@ pub struct FieldKV {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ContentEntry {
     content: String,
+    remote: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -238,6 +216,7 @@ impl ContentEntry {
     pub fn from_string(string: String) -> ContentEntry {
         ContentEntry {
             content: string,
+            remote: false,
             description: None,
             size: None,
             hash: None,
@@ -254,18 +233,15 @@ impl ContentEntry {
 pub struct User {
     pub public_key: PublicKey,
     #[serde(rename = "type")]
-    pub rtype: VersiaType,
+    pub rtype: String,
     pub id: Uuid,
     pub uri: Url,
     #[serde(with = "iso_versia")]
     pub created_at: OffsetDateTime,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
+    pub collections: UserCollections,
     pub inbox: Url,
-    pub outbox: Url,
-    pub featured: Url,
-    pub followers: Url,
-    pub following: Url,
     pub likes: Url,
     pub dislikes: Url,
     pub username: String,
@@ -280,6 +256,15 @@ pub struct User {
     pub indexable: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extensions: Option<ExtensionSpecs>,
+    pub manually_approves_followers: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserCollections {
+    pub outbox: Url,
+    pub featured: Url,
+    pub followers: Url,
+    pub following: Url,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -321,7 +306,7 @@ pub struct LinkPreview {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Note {
     #[serde(rename = "type")]
-    pub rtype: VersiaType,
+    pub rtype: String,
     pub id: Uuid,
     pub uri: Url,
     pub author: Url,
@@ -349,46 +334,6 @@ pub struct Note {
     pub subject: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_sensitive: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub visibility: Option<VisibilityType>,
-    //TODO extensions
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Patch {
-    #[serde(rename = "type")]
-    pub rtype: VersiaType,
-    pub id: Uuid,
-    pub uri: Url,
-    pub author: Url,
-    #[serde(with = "iso_versia")]
-    pub created_at: OffsetDateTime,
-    #[serde(with = "iso_versia")]
-    pub patched_at: OffsetDateTime,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub category: Option<CategoryType>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub content: Option<ContentFormat>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub device: Option<DeviceInfo>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub previews: Option<Vec<LinkPreview>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub group: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub attachments: Option<Vec<ContentFormat>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub replies_to: Option<Url>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub quotes: Option<Url>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mentions: Option<Vec<Url>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub subject: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_sensitive: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub visibility: Option<VisibilityType>,
     //TODO extensions
 }
 
@@ -399,14 +344,14 @@ pub struct Outbox {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub next: Option<Url>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub prev: Option<Url>,
+    pub previous: Option<Url>,
     pub items: Vec<Note>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Follow {
     #[serde(rename = "type")]
-    pub rtype: VersiaType,
+    pub rtype: String,
     pub id: Uuid,
     pub uri: Url,
     pub author: Url,
@@ -418,11 +363,34 @@ pub struct Follow {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FollowResult {
     #[serde(rename = "type")]
-    pub rtype: VersiaType,
+    pub rtype: String,
     pub id: Uuid,
     pub uri: Url,
     pub author: Url,
     #[serde(with = "iso_versia")]
     pub created_at: OffsetDateTime,
     pub follower: Url,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Unfollow {
+    #[serde(rename = "type")]
+    pub rtype: String,
+    pub id: Uuid,
+    pub author: Url,
+    #[serde(with = "iso_versia")]
+    pub created_at: OffsetDateTime,
+    pub followee: Url,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Delete {
+    #[serde(rename = "type")]
+    pub rtype: String,
+    pub id: Uuid,
+    pub author: Option<Url>,
+    #[serde(with = "iso_versia")]
+    pub created_at: OffsetDateTime,
+    pub deleted_type: String,
+    pub deleted: Url,
 }

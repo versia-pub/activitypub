@@ -37,7 +37,7 @@ pub async fn send_follow_accept_to_versia(model: follow_relation::Model) -> anyh
     let versia_followee = versia_user_from_db(followee_model).await?;
 
     let entity = FollowResult {
-        rtype: super::objects::VersiaType::FollowAccept,
+        rtype: "FollowAccept".to_string(),
         id,
         uri,
         created_at: OffsetDateTime::now_utc(),

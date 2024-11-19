@@ -6,6 +6,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use reqwest::header::{self, CONTENT_TYPE};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
+use serde_json::to_string;
 use time::OffsetDateTime;
 use url::Url;
 
@@ -22,7 +23,7 @@ use crate::{
 };
 
 use super::{
-    objects::{CategoryType, ContentEntry, ContentFormat, Note, PublicKey},
+    objects::{CategoryType, ContentEntry, ContentFormat, Note, PublicKey, UserCollections},
     superx::request_client,
 };
 
@@ -43,12 +44,12 @@ pub async fn versia_post_from_db(
         .one(DB.get().unwrap())
         .await?;
     let author = Url::parse(&creator.unwrap().url)?;
-    let visibility = match post.visibility.as_str() {
-        "public" => super::objects::VisibilityType::Public,
-        "followers" => super::objects::VisibilityType::Followers,
-        "direct" => super::objects::VisibilityType::Direct,
-        "unlisted" => super::objects::VisibilityType::Unlisted,
-        _ => super::objects::VisibilityType::Public,
+    let group = match post.visibility.as_str() {
+        "public" => Some("public".to_string()),
+        "followers" => Some("followers".to_string()),
+        "direct" => None,
+        //"unlisted" => super::objects::VisibilityType::Unlisted,
+        _ => Some("public".to_string()),
     };
     //let mut mentions = Vec::new();
     //for obj in post.tag.clone() {
@@ -60,7 +61,7 @@ pub async fn versia_post_from_db(
         ContentEntry::from_string(post.content),
     );
     let note = super::objects::Note {
-        rtype: super::objects::VersiaType::Note,
+        rtype: "Note".to_string(),
         id: uuid::Uuid::parse_str(&post.id)?,
         author: author.clone(),
         uri: url.clone(),
@@ -69,11 +70,10 @@ pub async fn versia_post_from_db(
         mentions: None,
         category: Some(CategoryType::Microblog),
         device: None,
-        visibility: Some(visibility),
         previews: None,
         replies_to: None,
         quotes: None,
-        group: None,
+        group,
         attachments: None,
         subject: post.title,
         is_sensitive: Some(post.sensitive),
@@ -190,11 +190,9 @@ pub async fn versia_user_from_db(
                     content_type_header.unwrap().to_str().unwrap().to_string()
                 });
                 content_format.x.insert(media_type, content_entry);
-                let mut name = tag.name.chars();
-                name.next();
-                name.next_back();
+                let name = tag.name;
                 emojis.push(super::objects::CustomEmoji {
-                    name: name.as_str().to_string(),
+                    name,
                     url: content_format,
                 });
             }
@@ -205,20 +203,23 @@ pub async fn versia_user_from_db(
     let extensions = super::objects::ExtensionSpecs {
         custom_emojis: emojis,
     };
+    let collections = UserCollections {
+        outbox: outbox_url,
+        followers: followers_url,
+        following: following_url,
+        featured: featured_url,
+    };
     let user = super::objects::User {
-        rtype: super::objects::VersiaType::User,
+        rtype: "User".to_string(),
         id: uuid::Uuid::parse_str(&user.id)?,
         uri: url.clone(),
         username: user.username,
         display_name,
         inbox: inbox_url,
-        outbox: outbox_url,
-        followers: followers_url,
-        following: following_url,
-        featured: featured_url,
         likes: likes_url,
         dislikes: dislikes_url,
         bio: Some(bio),
+        collections,
         avatar,
         header,
         fields: Some(fields),
@@ -226,10 +227,12 @@ pub async fn versia_user_from_db(
         created_at: OffsetDateTime::from_unix_timestamp(user.created_at.timestamp()).unwrap(),
         public_key: PublicKey {
             actor: url.clone(),
-            public_key: "AAAAC3NzaC1lZDI1NTE5AAAAIMxsX+lEWkHZt9NOvn9yYFP0Z++186LY4b97C4mwj/f2"
+            key: "AAAAC3NzaC1lZDI1NTE5AAAAIMxsX+lEWkHZt9NOvn9yYFP0Z++186LY4b97C4mwj/f2"
                 .to_string(), // dummy key
+            algorithm: "ed25519".to_string(),
         },
         extensions: Some(extensions),
+        manually_approves_followers: false,
     };
     Ok(user)
 }
@@ -418,8 +421,8 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
             ),
             summary: Set(option_content_format_text(ls_user.bio).await),
             updated_at: Set(Some(Utc::now())),
-            followers: Set(Some(ls_user.followers.to_string())),
-            following: Set(Some(ls_user.following.to_string())),
+            followers: Set(Some(ls_user.collections.followers.to_string())),
+            following: Set(Some(ls_user.collections.following.to_string())),
             ap_json: Set(Some(serde_json::to_string(&ap_json).unwrap())),
             ..Default::default()
         };
@@ -464,33 +467,33 @@ pub async fn receive_versia_note(
             mentions.push(obj.href.clone());
         }
         let to = match note
-            .visibility
+            .group
             .clone()
-            .unwrap_or(super::objects::VisibilityType::Public)
+            .unwrap_or("nothing".to_string()).as_str()
         {
-            super::objects::VisibilityType::Public => {
-                let mut vec = vec![public(), Url::parse(&user.followers.to_string().as_str())?];
+            "public" => {
+                let mut vec = vec![public(), Url::parse(&user.collections.followers.to_string().as_str())?];
                 vec.append(&mut mentions.clone());
                 vec
             }
-            super::objects::VisibilityType::Followers => {
-                let mut vec = vec![Url::parse(&user.followers.to_string().as_str())?];
+            "unlisted" => {
+                let mut vec = vec![Url::parse(&user.collections.followers.to_string().as_str())?];
                 vec.append(&mut mentions.clone());
                 vec
             }
-            super::objects::VisibilityType::Direct => mentions.clone(),
-            super::objects::VisibilityType::Unlisted => {
-                let mut vec = vec![Url::parse(&user.followers.to_string().as_str())?];
+            "followers" => {
+                let mut vec = vec![Url::parse(&user.collections.followers.to_string().as_str())?];
                 vec.append(&mut mentions.clone());
                 vec
             }
+            _ => mentions.clone(),
         };
         let cc = match note
-            .visibility
+            .group
             .clone()
-            .unwrap_or(super::objects::VisibilityType::Public)
+            .unwrap_or("nothing".to_string()).as_str()
         {
-            super::objects::VisibilityType::Unlisted => Some(vec![public()]),
+            "unlisted" => Some(vec![public()]),
             _ => None,
         };
         let reply: Option<ObjectId<entities::post::Model>> =
@@ -542,14 +545,14 @@ pub async fn receive_versia_note(
         };
 
         let visibility = match note
-            .visibility
+            .group
             .clone()
-            .unwrap_or(super::objects::VisibilityType::Public)
+            .unwrap_or("nothing".to_string()).as_str()
         {
-            super::objects::VisibilityType::Public => "public",
-            super::objects::VisibilityType::Followers => "followers",
-            super::objects::VisibilityType::Direct => "direct",
-            super::objects::VisibilityType::Unlisted => "unlisted",
+            "public" => "public",
+            "followers" => "followers",
+            "unlisted" => "unlisted",
+            _ => "direct",
         };
         if let Some(obj) = note.replies_to {
             println!("Quoting: {}", db_post_from_url(obj).await?.url);
