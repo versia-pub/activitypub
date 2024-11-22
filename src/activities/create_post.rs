@@ -18,7 +18,7 @@ use activitypub_federation::{
 };
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use tracing::{info, warn};
 use url::Url;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -95,7 +95,9 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
 
     let mut array;
     if versia_post.mentions.is_some() {
+        info!("good");
         array = versia_post.mentions.clone().unwrap();
+        info!("{:#?}", versia_post.mentions.clone().unwrap());
     } else {
         array = Vec::new();
     }
@@ -124,7 +126,7 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
         let push = req_client.post(inbox.clone())
             .json(&json)
             .send();
-        info!("{}", inbox.to_string());
+        warn!("{}", inbox.to_string());
         tokio::spawn(push);
     }
 
