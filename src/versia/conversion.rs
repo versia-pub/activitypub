@@ -362,7 +362,7 @@ pub async fn db_user_from_url(url: Url) -> anyhow::Result<entities::user::Model>
                     let touple = emoji.url.select_rich_img_touple().await?;
                     tags.push(TagType {
                         id: Some(Url::parse(&touple.1).unwrap()),
-                        name: ":".to_string() + &emoji.name + ":",
+                        name: emoji.name,
                         type_: "Emoji".to_string(),
                         updated: Some(Utc::now()),
                         href: None,
