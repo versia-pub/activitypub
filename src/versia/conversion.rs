@@ -60,9 +60,9 @@ pub async fn versia_post_from_db(
         if let Some(model) = option {
             let user = versia_user_from_db(model).await?;
             let domain = user.inbox.domain();
-            if domain.is_none() || domain.is_some_and(|domain| LYSAND_DOMAIN.as_str() != domain) {
-                continue;
-            }
+            //if domain.is_none() || domain.is_some_and(|domain| LYSAND_DOMAIN.as_str() != domain) {
+            //    continue;
+            //} TODO
             mentions.push(user.inbox);
         }
     }
