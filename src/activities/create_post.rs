@@ -18,6 +18,7 @@ use activitypub_federation::{
 };
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
+use tracing::info;
 use url::Url;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -120,9 +121,10 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
 
     let req_client = request_client();
     for inbox in array {
-        let push = req_client.post(inbox)
+        let push = req_client.post(inbox.clone())
             .json(&json)
             .send();
+        info!("{}", inbox.to_string());
         tokio::spawn(push);
     }
 
