@@ -99,6 +99,7 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
         array = versia_post.mentions.clone().unwrap();
         info!("{:#?}", versia_post.mentions.clone().unwrap());
     } else {
+        info!("fake");
         array = Vec::new();
     }
 
