@@ -115,6 +115,9 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
 
     array.append(&mut list_url);
 
+    array.sort();
+    array.dedup();
+
     let req_client = request_client();
     for inbox in array {
         let push = req_client.post(inbox)
