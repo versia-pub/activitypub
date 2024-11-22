@@ -79,7 +79,7 @@ pub async fn versia_post_from_db(
         uri: url.clone(),
         created_at: OffsetDateTime::from_unix_timestamp(post.created_at.timestamp()).unwrap(),
         content: Some(content),
-        mentions: None,
+        mentions: Some(mentions),
         category: Some(CategoryType::Microblog),
         device: None,
         previews: None,
