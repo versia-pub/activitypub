@@ -190,11 +190,11 @@ impl Object for user::Model {
 
     async fn from_json(
         json: Self::Kind,
-        _data: &Data<Self::DataType>,
+        data: &Data<Self::DataType>,
     ) -> Result<Self, Self::Error> {
         let query = User::find()
-            .filter(user::Column::Id.eq(json.id.inner().as_str()))
-            .one(_data.database_connection.as_ref())
+            .filter(user::Column::Url.eq(json.id.inner().as_str()))
+            .one(data.database_connection.as_ref())
             .await?;
         if let Some(user) = query {
             return Ok(user);
@@ -216,7 +216,7 @@ impl Object for user::Model {
             ap_json: Set(Some(serde_json::to_string(&copied_json).unwrap())),
             ..Default::default()
         };
-        let model = model.insert(_data.database_connection.as_ref()).await;
+        let model = model.insert(data.database_connection.as_ref()).await;
         if let Err(err) = model {
             eprintln!("Error inserting user: {:?}", err);
             Err(err.into())

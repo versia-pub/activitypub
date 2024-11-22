@@ -1,11 +1,5 @@
 use crate::{
-    activities::create_post::CreatePost,
-    database::StateHandle,
-    entities::{post, user},
-    error::Error,
-    versia::conversion::db_user_from_url,
-    objects::person::DbUser,
-    utils::generate_object_id,
+    activities::create_post::CreatePost, database::StateHandle, entities::{prelude::Post, user, post}, error::Error, objects::person::DbUser, utils::generate_object_id, versia::conversion::db_user_from_url
 };
 use activitypub_federation::{
     config::Data,
@@ -120,6 +114,13 @@ impl Object for post::Model {
             "Received post with content {} and id {}",
             &json.content, &json.id
         );
+        let query = Post::find()
+            .filter(post::Column::Url.eq(json.id.inner().as_str()))
+            .one(data.database_connection.as_ref())
+            .await?;
+        if let Some(post) = query {
+            return Ok(post);
+        }
         let creator = json.attributed_to.dereference(data).await?;
         let post: post::ActiveModel = post::ActiveModel {
             content: Set(json.content.clone()),
