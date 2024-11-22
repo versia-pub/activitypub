@@ -1,4 +1,4 @@
-use activitypub_federation::{fetch::object_id::ObjectId, http_signatures::generate_actor_keypair};
+use activitypub_federation::{fetch::object_id::ObjectId, http_signatures::generate_actor_keypair, traits::Object};
 use activitystreams_kinds::public;
 use anyhow::{anyhow, Ok};
 use async_recursion::async_recursion;
@@ -51,10 +51,22 @@ pub async fn versia_post_from_db(
         //"unlisted" => super::objects::VisibilityType::Unlisted,
         _ => Some("public".to_string()),
     };
-    //let mut mentions = Vec::new();
-    //for obj in post.tag.clone() {
-    //    mentions.push(obj.href.clone());
-    //}
+
+    let mut mentions = Vec::new();
+    let ap_obj = serde_json::from_str::<crate::objects::post::Note>(post.ap_json.unwrap().as_str())?;
+    let req_data = data.to_request_data();
+    for obj in ap_obj.tag.clone() {
+        let option = user::Model::read_from_id(obj.href, &req_data).await.unwrap();
+        if let Some(model) = option {
+            let user = versia_user_from_db(model).await?;
+            let domain = user.inbox.domain();
+            if domain.is_none() || domain.is_some_and(|domain| LYSAND_DOMAIN.as_str() != domain) {
+                continue;
+            }
+            mentions.push(user.inbox);
+        }
+    }
+
     let mut content = ContentFormat::default();
     content.x.insert(
         "text/html".to_string(),

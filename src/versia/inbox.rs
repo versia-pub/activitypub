@@ -33,6 +33,7 @@ pub async fn inbox_entry(json: &str) -> Result<()> {
         match json_type.as_str() {
             Some("Note") => {
                 let note: super::objects::Note = serde_json::from_str(json)?;
+                federate_inbox(note).await?;
             }
             Some("Follow") => {
                 let follow_req: super::objects::Follow = serde_json::from_str(json)?;
@@ -127,6 +128,12 @@ async fn follow_request(follow: super::objects::Follow) -> Result<()> {
     for send in sends {
         send.sign_and_send(&data.to_request_data()).await?;
     }
+
+    Ok(())
+}
+
+async fn federate_inbox(note: super::objects::Note) -> Result<()> {
+    
 
     Ok(())
 }
