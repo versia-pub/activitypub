@@ -121,16 +121,12 @@ pub async fn versia_user_from_db(
     let url = Url::parse(&user.url)?;
     let ap = user.ap_json.unwrap();
     let serialized_ap: crate::objects::person::Person = serde_json::from_str(&ap)?;
-    let inbox_url = Url::parse(&("https://".to_string() + &API_DOMAIN + "/apbridge/versia/inbox"))?;
+    let inbox_url;
     let outbox_url = Url::parse(
         ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/outbox/" + &user.id).as_str(),
     )?;
-    let followers_url = Url::parse(
-        ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/followers/" + &user.id).as_str(),
-    )?;
-    let following_url = Url::parse(
-        ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/following/" + &user.id).as_str(),
-    )?;
+    let followers_url;
+    let following_url;
     let featured_url = Url::parse(
         ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/featured/" + &user.id).as_str(),
     )?;
@@ -140,6 +136,21 @@ pub async fn versia_user_from_db(
     let dislikes_url = Url::parse(
         ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/dislikes/" + &user.id).as_str(),
     )?;
+
+    if user.local {
+        inbox_url = Url::parse(&user.inbox)?;
+        followers_url = Url::parse(&user.followers.unwrap())?;
+        following_url = Url::parse(&user.following.unwrap())?;
+    } else {
+        inbox_url = Url::parse(&("https://".to_string() + &API_DOMAIN + "/apbridge/versia/inbox"))?;
+        followers_url = Url::parse(
+            ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/followers/" + &user.id).as_str(),
+        )?;
+        following_url = Url::parse(
+            ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/following/" + &user.id).as_str(),
+        )?;
+    }
+
     let og_displayname_ref = user.name.clone();
     let og_username_ref = user.username.clone();
     let empty = "".to_owned();
