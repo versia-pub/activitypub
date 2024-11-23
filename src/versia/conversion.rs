@@ -1,4 +1,6 @@
-use activitypub_federation::{fetch::object_id::ObjectId, http_signatures::generate_actor_keypair, traits::Object};
+use activitypub_federation::{
+    fetch::object_id::ObjectId, http_signatures::generate_actor_keypair, traits::Object,
+};
 use activitystreams_kinds::public;
 use anyhow::{anyhow, Ok};
 use async_recursion::async_recursion;
@@ -19,7 +21,7 @@ use crate::{
         person::{AttachmentType, EndpointType, IconType, Person, TagType},
         post::Mention,
     },
-    utils::{generate_versia_post_url, generate_object_id, generate_user_id},
+    utils::{generate_object_id, generate_user_id, generate_versia_post_url},
     API_DOMAIN, DB, FEDERATION_CONFIG, LOCAL_USER_NAME, LYSAND_DOMAIN, USERNAME,
 };
 
@@ -54,12 +56,29 @@ pub async fn versia_post_from_db(
     };
 
     let mut mentions = Vec::new();
-    let ap_obj = serde_json::from_str::<crate::objects::post::Note>(post.ap_json.unwrap().as_str())?;
+    let ap_obj =
+        serde_json::from_str::<crate::objects::post::Note>(post.ap_json.unwrap().as_str())?;
     let req_data = data.to_request_data();
     for obj in ap_obj.tag.clone() {
         info!("Url: {}", obj.href);
-        let option = user::Model::read_from_id(obj.href, &req_data).await.unwrap();
+        let option = user::Model::read_from_id(obj.href.clone(), &req_data)
+            .await
+            .unwrap();
         if let Some(model) = option {
+            info!("Model: {:?}", model);
+            let user = versia_user_from_db(model).await?;
+            let domain = user.inbox.domain();
+            //if domain.is_none() || domain.is_some_and(|domain| LYSAND_DOMAIN.as_str() != domain) {
+            //    continue;
+            //} TODO
+            mentions.push(user.inbox);
+        } else if let Some(model) = entities::prelude::User::find()
+            .filter(
+                entities::user::Column::Id.eq(obj.href.path_segments().unwrap().last().unwrap()),
+            )
+            .one(data.database_connection.as_ref())
+            .await?
+        {
             info!("Model: {:?}", model);
             let user = versia_user_from_db(model).await?;
             let domain = user.inbox.domain();
@@ -242,8 +261,7 @@ pub async fn versia_user_from_db(
         created_at: OffsetDateTime::from_unix_timestamp(user.created_at.timestamp()).unwrap(),
         public_key: PublicKey {
             actor: url.clone(),
-            key: "AAAAC3NzaC1lZDI1NTE5AAAAIMxsX+lEWkHZt9NOvn9yYFP0Z++186LY4b97C4mwj/f2"
-                .to_string(), // dummy key
+            key: "AAAAC3NzaC1lZDI1NTE5AAAAIMxsX+lEWkHZt9NOvn9yYFP0Z++186LY4b97C4mwj/f2".to_string(), // dummy key
             algorithm: "ed25519".to_string(),
         },
         extensions: Some(extensions),
@@ -274,7 +292,8 @@ pub async fn db_post_from_url(url: Url) -> anyhow::Result<entities::post::Model>
         Ok(post)
     } else {
         let post = fetch_note_from_url(url.clone()).await?;
-        let res = receive_versia_note(post, "https://".to_string() + &API_DOMAIN + "/example").await?; // TODO: Replace user id with actual user id
+        let res =
+            receive_versia_note(post, "https://".to_string() + &API_DOMAIN + "/example").await?; // TODO: Replace user id with actual user id
         Ok(res)
     }
 }
@@ -481,33 +500,32 @@ pub async fn receive_versia_note(
         for obj in tag.clone() {
             mentions.push(obj.href.clone());
         }
-        let to = match note
-            .group
-            .clone()
-            .unwrap_or("nothing".to_string()).as_str()
-        {
+        let to = match note.group.clone().unwrap_or("nothing".to_string()).as_str() {
             "public" => {
-                let mut vec = vec![public(), Url::parse(&user.collections.followers.to_string().as_str())?];
+                let mut vec = vec![
+                    public(),
+                    Url::parse(&user.collections.followers.to_string().as_str())?,
+                ];
                 vec.append(&mut mentions.clone());
                 vec
             }
             "unlisted" => {
-                let mut vec = vec![Url::parse(&user.collections.followers.to_string().as_str())?];
+                let mut vec = vec![Url::parse(
+                    &user.collections.followers.to_string().as_str(),
+                )?];
                 vec.append(&mut mentions.clone());
                 vec
             }
             "followers" => {
-                let mut vec = vec![Url::parse(&user.collections.followers.to_string().as_str())?];
+                let mut vec = vec![Url::parse(
+                    &user.collections.followers.to_string().as_str(),
+                )?];
                 vec.append(&mut mentions.clone());
                 vec
             }
             _ => mentions.clone(),
         };
-        let cc = match note
-            .group
-            .clone()
-            .unwrap_or("nothing".to_string()).as_str()
-        {
+        let cc = match note.group.clone().unwrap_or("nothing".to_string()).as_str() {
             "unlisted" => Some(vec![public()]),
             _ => None,
         };
@@ -559,11 +577,7 @@ pub async fn receive_versia_note(
             in_reply_to: reply.clone(),
         };
 
-        let visibility = match note
-            .group
-            .clone()
-            .unwrap_or("nothing".to_string()).as_str()
-        {
+        let visibility = match note.group.clone().unwrap_or("nothing".to_string()).as_str() {
             "public" => "public",
             "followers" => "followers",
             "unlisted" => "unlisted",
