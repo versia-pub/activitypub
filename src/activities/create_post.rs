@@ -125,7 +125,7 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
         .one(db)
         .await?.unwrap();
     let versia_user = versia_user_from_db(model).await?;
-    let header = format!("https://{}/apbridge/versia/query?user_url={}", API_DOMAIN.to_string(), versia_user.uri.to_string());
+    let header = format!("https://{}/apbridge/versia/query?user_url={}", "api.beta.versia.social", versia_user.uri.to_string()); //TODO jesse needs to fix this
     for inbox in array {
         let push = req_client.post(inbox.clone())
             .header("X-Signed-By", header.clone())
