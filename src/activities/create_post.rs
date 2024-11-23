@@ -1,8 +1,8 @@
 use crate::{
-    database::StateHandle, entities::{self, post, user}, error::Error, objects::{
+    database::StateHandle, entities::{self, post, prelude, user}, error::Error, objects::{
         person::DbUser,
         post::{DbPost, Note},
-    }, utils::{base_url_encode, generate_create_id, generate_random_object_id}, versia::{conversion::versia_post_from_db, objects::SortAlphabetically, superx::request_client}, API_DOMAIN, DB
+    }, utils::{base_url_encode, generate_create_id, generate_random_object_id}, versia::{conversion::{versia_post_from_db, versia_user_from_db}, objects::SortAlphabetically, superx::request_client}, API_DOMAIN, DB
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
@@ -120,9 +120,15 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
     array.dedup();
 
     let req_client = request_client();
+    let model = prelude::User::find()
+        .filter(user::Column::Id.eq(note.creator.as_str()))
+        .one(db)
+        .await?.unwrap();
+    let versia_user = versia_user_from_db(model).await?;
+    let header = format!("https://{}/apbridge/versia/query?user_url={}", API_DOMAIN.to_string(), versia_user.uri.to_string());
     for inbox in array {
         let push = req_client.post(inbox.clone())
-            .header("X-Signed-By", note.url.to_string())
+            .header("X-Signed-By", header.clone())
             .json(&json);
         warn!("{}", inbox.to_string());
         tokio::spawn(push_to_inbox(push));
