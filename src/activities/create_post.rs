@@ -1,12 +1,8 @@
 use crate::{
-    database::StateHandle,
-    entities::{self, post, user},
-    error::Error,
-    objects::{
+    database::StateHandle, entities::{self, post, user}, error::Error, objects::{
         person::DbUser,
         post::{DbPost, Note},
-    },
-    utils::{base_url_encode, generate_create_id, generate_random_object_id}, versia::{conversion::versia_post_from_db, objects::SortAlphabetically, superx::request_client}, DB,
+    }, utils::{base_url_encode, generate_create_id, generate_random_object_id}, versia::{conversion::versia_post_from_db, objects::SortAlphabetically, superx::request_client}, API_DOMAIN, DB
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
@@ -126,6 +122,7 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
     let req_client = request_client();
     for inbox in array {
         let push = req_client.post(inbox.clone())
+            .header("X-Signed-By", format!("instance {}", API_DOMAIN.to_string()))
             .json(&json);
         warn!("{}", inbox.to_string());
         tokio::spawn(push_to_inbox(push));
