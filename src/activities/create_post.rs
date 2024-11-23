@@ -16,6 +16,7 @@ use activitypub_federation::{
     protocol::{context::WithContext, helpers::deserialize_one_or_many},
     traits::{ActivityHandler, Object},
 };
+use reqwest::RequestBuilder;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
@@ -125,11 +126,20 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
     let req_client = request_client();
     for inbox in array {
         let push = req_client.post(inbox.clone())
-            .json(&json)
-            .send();
+            .json(&json);
         warn!("{}", inbox.to_string());
-        tokio::spawn(push);
+        tokio::spawn(push_to_inbox(push));
     }
+
+    Ok(())
+}
+
+async fn push_to_inbox(req: RequestBuilder) -> anyhow::Result<()>{
+    let req_client = request_client();
+    let response = req_client.execute(req.build()?).await?;
+
+    info!("{}", response.status());
+    info!("{:?}", response.text().await?);
 
     Ok(())
 }
