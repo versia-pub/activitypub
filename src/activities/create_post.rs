@@ -122,7 +122,7 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
     let req_client = request_client();
     for inbox in array {
         let push = req_client.post(inbox.clone())
-            .header("X-Signed-By", format!("instance {}", API_DOMAIN.to_string()))
+            .header("X-Signed-By", note.url.to_string())
             .json(&json);
         warn!("{}", inbox.to_string());
         tokio::spawn(push_to_inbox(push));
