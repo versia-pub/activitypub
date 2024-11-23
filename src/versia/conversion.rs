@@ -8,6 +8,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 use time::OffsetDateTime;
+use tracing::info;
 use url::Url;
 
 use crate::{
@@ -56,8 +57,10 @@ pub async fn versia_post_from_db(
     let ap_obj = serde_json::from_str::<crate::objects::post::Note>(post.ap_json.unwrap().as_str())?;
     let req_data = data.to_request_data();
     for obj in ap_obj.tag.clone() {
+        info!("Url: {}", obj.href);
         let option = user::Model::read_from_id(obj.href, &req_data).await.unwrap();
         if let Some(model) = option {
+            info!("Model: {:?}", model);
             let user = versia_user_from_db(model).await?;
             let domain = user.inbox.domain();
             //if domain.is_none() || domain.is_some_and(|domain| LYSAND_DOMAIN.as_str() != domain) {
