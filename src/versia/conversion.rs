@@ -220,6 +220,8 @@ pub async fn versia_user_from_db(
         followers: followers_url,
         following: following_url,
         featured: featured_url,
+        likes: Some(likes_url),
+        dislikes: Some(dislikes_url),
     };
     let user = super::objects::User {
         rtype: "User".to_string(),
@@ -228,8 +230,6 @@ pub async fn versia_user_from_db(
         username: user.username,
         display_name,
         inbox: inbox_url,
-        likes: Some(likes_url),
-        dislikes: Some(dislikes_url),
         bio: Some(bio),
         collections,
         avatar,

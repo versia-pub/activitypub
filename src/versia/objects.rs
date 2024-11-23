@@ -242,10 +242,6 @@ pub struct User {
     pub display_name: Option<String>,
     pub collections: UserCollections,
     pub inbox: Url,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub likes: Option<Url>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub dislikes: Option<Url>,
     pub username: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bio: Option<ContentFormat>,
@@ -267,6 +263,16 @@ pub struct UserCollections {
     pub featured: Url,
     pub followers: Url,
     pub following: Url,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        rename="pub.versia:likes/Likes"
+    )]
+    pub likes: Option<Url>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        rename="pub.versia:likes/Dislikes"
+    )]
+    pub dislikes: Option<Url>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
