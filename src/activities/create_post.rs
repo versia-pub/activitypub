@@ -2,7 +2,7 @@ use crate::{
     database::StateHandle, entities::{self, post, prelude, user}, error::Error, objects::{
         person::DbUser,
         post::{DbPost, Note},
-    }, utils::{base_url_encode, generate_create_id, generate_random_object_id}, versia::{conversion::{versia_post_from_db, versia_user_from_db}, objects::SortAlphabetically, superx::request_client}, API_DOMAIN, DB
+    }, utils::{base_url_encode, generate_create_id, generate_random_object_id}, versia::{conversion::{versia_post_from_db, versia_user_from_db}, objects::SortAlphabetically, superx::request_client}, API_DOMAIN, AUTH, DB
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
@@ -127,6 +127,7 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
     let versia_user = versia_user_from_db(model).await?;
     for inbox in array {
         let push = req_client.post(inbox.clone())
+            .bearer_auth(AUTH.to_string())
             .json(&json);
         warn!("{}", inbox.to_string());
         tokio::spawn(push_to_inbox(push));

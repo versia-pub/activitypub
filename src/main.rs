@@ -166,6 +166,7 @@ lazy_static! {
     static ref USERNAME: String =
         env::var("LOCAL_USER_NAME").unwrap_or(LOCAL_USER_NAME.to_string());
     static ref API_DOMAIN: String = env::var("API_DOMAIN").expect("not set API_DOMAIN");
+    static ref AUTH: String = env::var("AUTH").expect("not set AUTH");
     static ref LYSAND_DOMAIN: String = env::var("LYSAND_DOMAIN").expect("not set LYSAND_DOMAIN");
     static ref FEDERATED_DOMAIN: String =
         env::var("FEDERATED_DOMAIN").unwrap_or(API_DOMAIN.to_string());
