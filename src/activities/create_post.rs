@@ -88,7 +88,6 @@ impl ActivityHandler for CreatePost {
 
 async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()> {
     let versia_post = versia_post_from_db(note.clone()).await?;
-    let json = serde_json::to_string_pretty(&SortAlphabetically(&versia_post))?;
 
     let mut array;
     if versia_post.mentions.is_some() {
@@ -124,11 +123,10 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
         .filter(user::Column::Id.eq(note.creator.as_str()))
         .one(db)
         .await?.unwrap();
-    let versia_user = versia_user_from_db(model).await?;
     for inbox in array {
         let push = req_client.post(inbox.clone())
             .bearer_auth(AUTH.to_string())
-            .json(&json);
+            .json(&SortAlphabetically(&versia_post));
         warn!("{}", inbox.to_string());
         tokio::spawn(push_to_inbox(push));
     }
