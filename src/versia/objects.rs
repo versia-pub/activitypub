@@ -36,6 +36,7 @@ fn sort_alphabetically<T: Serialize, S: serde::Serializer>(
 pub struct SortAlphabetically<T: Serialize>(#[serde(serialize_with = "sort_alphabetically")] pub T);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum CategoryType {
     Microblog,
     Forum,
