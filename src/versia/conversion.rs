@@ -486,6 +486,15 @@ pub async fn receive_versia_note(
     note: Note,
     db_id: String,
 ) -> anyhow::Result<entities::post::Model> {
+    let post_res: Option<post::Model> = prelude::Post::find()
+    .filter(entities::post::Column::Id.eq(note.id.to_string()))
+    .one(DB.get().unwrap())
+    .await?;
+
+    if let Some(post) = post_res {
+        return Ok(post);
+    }
+
     let versia_author: entities::user::Model = db_user_from_url(note.author.clone()).await?;
     let user_res = prelude::User::find_by_id(db_id)
         .one(DB.get().unwrap())
