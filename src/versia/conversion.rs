@@ -515,6 +515,19 @@ pub async fn receive_versia_note(
         let mut tag: Vec<Mention> = Vec::new();
         let domain = API_DOMAIN.as_str();
         for l_tag in note.mentions.clone().unwrap_or_default() {
+            if l_tag.clone().to_string().contains("apbridge/user") {
+                tag.push(Mention {
+                    href: l_tag,
+                    kind: Default::default(),
+                });
+                continue;
+            } else if !l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) {
+                tag.push(Mention {
+                    href: l_tag,
+                    kind: Default::default(),
+                });
+                continue;
+            }
             let user = db_user_from_url(l_tag).await?;
             let ap_url = Url::parse(&format!(
                 "https://{}/apbridge/user/{}",
@@ -523,7 +536,7 @@ pub async fn receive_versia_note(
             tag.push(Mention {
                 href: ap_url,
                 kind: Default::default(),
-            })
+            });
         }
         let mut mentions = Vec::new();
         for obj in tag.clone() {
