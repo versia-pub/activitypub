@@ -525,6 +525,7 @@ pub async fn receive_versia_note(
             } else if !(l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) || l_tag.clone().to_string().contains(domain)) {
                 println!("{}", l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) );
                 println!("{}", l_tag.clone().to_string().contains(domain));
+                println!("-------------- {} -----------------a", l_tag.clone().to_string());
                 tag.push(Mention {
                     href: l_tag,
                     kind: Default::default(),
