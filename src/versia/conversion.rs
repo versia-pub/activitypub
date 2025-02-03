@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use activitypub_federation::{
     fetch::object_id::ObjectId, http_signatures::generate_actor_keypair, traits::Object,
 };
@@ -511,9 +513,15 @@ pub async fn receive_versia_note(
         println!("{}", note.author.clone());
         let user = fetch_user_from_url(note.author.clone()).await?;
         let mut tag: Vec<Mention> = Vec::new();
+        let domain = API_DOMAIN.as_str();
         for l_tag in note.mentions.clone().unwrap_or_default() {
+            let user = db_user_from_url(l_tag).await?;
+            let ap_url = Url::parse(&format!(
+                "https://{}/apbridge/user/{}",
+                domain, user.id
+            ).to_string())?;
             tag.push(Mention {
-                href: l_tag, //TODO convert to ap url
+                href: ap_url,
                 kind: Default::default(),
             })
         }
