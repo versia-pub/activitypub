@@ -152,14 +152,13 @@ async fn get_inbox_vec(ap_note: &crate::objects::post::Note) -> Vec<Url> {
     let mut inbox_users: Vec<Url> = Vec::new();
     let mut inbox: Vec<Url> = Vec::new();
 
-    for entry in ap_note.to.clone() {
-        if entry.to_string().eq_ignore_ascii_case(public().to_string().as_str()) {
-            let (_, mentions) = ap_note.to.split_at(2);
-            inbox_users.append(&mut mentions.to_vec());
-        } else {
-            let (_, mentions) = ap_note.to.split_at(1);
-            inbox_users.append(&mut mentions.to_vec());
-        }
+    let entry = ap_note.to.get(0).unwrap();
+    if entry.to_string().eq_ignore_ascii_case(public().to_string().as_str()) {
+        let (_, mentions) = ap_note.to.split_at(2);
+        inbox_users.append(&mut mentions.to_vec());
+    } else {
+        let (_, mentions) = ap_note.to.split_at(1);
+        inbox_users.append(&mut mentions.to_vec());
     }
 
     inbox_users.dedup();
