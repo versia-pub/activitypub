@@ -508,6 +508,7 @@ pub async fn receive_versia_note(
         let id: ObjectId<post::Model> =
             generate_object_id(data.domain(), &note.id.to_string())?.into();
         let user_id = generate_user_id(data.domain(), &target.id.to_string())?;
+        println!("{}", note.author.clone());
         let user = fetch_user_from_url(note.author.clone()).await?;
         let mut tag: Vec<Mention> = Vec::new();
         for l_tag in note.mentions.clone().unwrap_or_default() {
