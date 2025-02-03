@@ -617,7 +617,14 @@ pub async fn receive_versia_note(
             cc,
             to,
             tag,
-            attributed_to: Url::parse(user.uri.clone().as_str()).unwrap().into(),
+            attributed_to: {
+            let user = db_user_from_url(Url::parse(user.uri.clone().as_str()).unwrap()).await?;
+            let ap_url = Url::parse(&format!(
+                "https://{}/apbridge/user/{}",
+                domain, user.id
+            ).to_string())?;
+            ap_url.into()
+            },
             content: option_content_format_text(note.content)
                 .await
                 .unwrap_or_default(),
