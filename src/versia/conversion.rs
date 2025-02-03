@@ -521,7 +521,7 @@ pub async fn receive_versia_note(
                     kind: Default::default(),
                 });
                 continue;
-            } else if !l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) {
+            } else if !(l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) || l_tag.clone().to_string().contains(domain)) {
                 tag.push(Mention {
                     href: l_tag,
                     kind: Default::default(),
