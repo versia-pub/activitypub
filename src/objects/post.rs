@@ -23,7 +23,7 @@ pub struct DbPost {
     pub local: bool,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Note {
     #[serde(rename = "type")]

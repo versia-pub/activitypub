@@ -1,25 +1,21 @@
 use crate::{
-    activities::follow::Follow,
-    entities::{
+    activities::{create_post::CreatePost, follow::Follow}, entities::{
         self, follow_relation,
         prelude::{self, FollowRelation},
         user,
-    },
-    versia::http::main_versia_url_to_user_and_model,
-    utils::generate_follow_req_id,
-    API_DOMAIN, DB, FEDERATION_CONFIG,
+    }, utils::generate_follow_req_id, versia::http::main_versia_url_to_user_and_model, API_DOMAIN, DB, FEDERATION_CONFIG
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask, fetch::object_id::ObjectId, protocol::context::WithContext,
 };
-use activitystreams_kinds::activity::FollowType;
+use activitystreams_kinds::{activity::FollowType, public};
 use anyhow::Result;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityOrSelect, EntityTrait, QueryFilter, Set};
 use serde::Deserialize;
 use url::Url;
 
 use super::{
-    conversion::versia_user_from_db,
+    conversion::{db_user_from_url, receive_versia_note, versia_user_from_db},
     http::{versia_url_to_user, versia_url_to_user_and_model},
 };
 
@@ -133,7 +129,37 @@ async fn follow_request(follow: super::objects::Follow) -> Result<()> {
 }
 
 async fn federate_inbox(note: super::objects::Note) -> Result<()> {
-    
+    let db_user = db_user_from_url(note.author.clone()).await?;
+    let note = receive_versia_note(note, db_user.id).await?;
+
+    let ap_str = note.ap_json.clone().unwrap();
+    let ap_note = serde_json::from_str::<crate::objects::post::Note>(&ap_str)?;
+
+    tokio::spawn(async move {
+        let conf = FEDERATION_CONFIG.get().unwrap();
+        let inbox = get_inbox_vec(&ap_note);
+        
+        let res = CreatePost::sends(ap_note, note, inbox, &conf.to_request_data()).await;
+        if let Err(e) = res {
+            panic!("Problem federating: {e:?}");
+        }
+    });
 
     Ok(())
+}
+
+fn get_inbox_vec(ap_note: &crate::objects::post::Note) -> Vec<Url> {
+    let mut inbox: Vec<Url> = Vec::new();
+
+    for entry in ap_note.to.clone() {
+        if entry.to_string().eq_ignore_ascii_case(public().to_string().as_str()) {
+            let (_, mentions) = ap_note.to.split_at(2);
+            inbox.append(&mut mentions.to_vec());
+        } else {
+            let (_, mentions) = ap_note.to.split_at(1);
+            inbox.append(&mut mentions.to_vec());
+        }
+    }
+
+    inbox
 }
