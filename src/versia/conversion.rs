@@ -516,18 +516,22 @@ pub async fn receive_versia_note(
         let domain = API_DOMAIN.as_str();
         for l_tag in note.mentions.clone().unwrap_or_default() {
             if l_tag.clone().to_string().contains("apbridge/user") {
+                println!("{}", l_tag.clone().to_string().contains("apbridge/user"));
                 tag.push(Mention {
                     href: l_tag,
                     kind: Default::default(),
                 });
                 continue;
             } else if !(l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) || l_tag.clone().to_string().contains(domain)) {
+                println!("{}", l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) );
+                println!("{}", l_tag.clone().to_string().contains(domain));
                 tag.push(Mention {
                     href: l_tag,
                     kind: Default::default(),
                 });
                 continue;
             }
+            println!("+++++++ --------- ++++++++++");
             let user = db_user_from_url(l_tag).await?;
             let ap_url = Url::parse(&format!(
                 "https://{}/apbridge/user/{}",
