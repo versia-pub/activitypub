@@ -15,7 +15,7 @@ use serde::Deserialize;
 use url::Url;
 
 use super::{
-    conversion::{db_user_from_url, receive_versia_note, versia_user_from_db},
+    conversion::{db_user_from_url, fetch_user_from_url, receive_versia_note, versia_user_from_db},
     http::{versia_url_to_user, versia_url_to_user_and_model},
 };
 
@@ -137,7 +137,7 @@ async fn federate_inbox(note: super::objects::Note) -> Result<()> {
 
     tokio::spawn(async move {
         let conf = FEDERATION_CONFIG.get().unwrap();
-        let inbox = get_inbox_vec(&ap_note);
+        let inbox = get_inbox_vec(&ap_note).await;
         
         let res = CreatePost::sends(ap_note, note, inbox, &conf.to_request_data()).await;
         if let Err(e) = res {
@@ -148,18 +148,33 @@ async fn federate_inbox(note: super::objects::Note) -> Result<()> {
     Ok(())
 }
 
-fn get_inbox_vec(ap_note: &crate::objects::post::Note) -> Vec<Url> {
+async fn get_inbox_vec(ap_note: &crate::objects::post::Note) -> Vec<Url> {
+    let mut inbox_users: Vec<Url> = Vec::new();
     let mut inbox: Vec<Url> = Vec::new();
 
     for entry in ap_note.to.clone() {
         if entry.to_string().eq_ignore_ascii_case(public().to_string().as_str()) {
             let (_, mentions) = ap_note.to.split_at(2);
-            inbox.append(&mut mentions.to_vec());
+            inbox_users.append(&mut mentions.to_vec());
         } else {
             let (_, mentions) = ap_note.to.split_at(1);
-            inbox.append(&mut mentions.to_vec());
+            inbox_users.append(&mut mentions.to_vec());
         }
     }
+
+    inbox_users.dedup();
+
+
+    let conf = FEDERATION_CONFIG.get().unwrap();
+    let data = &conf.to_request_data();
+
+    for user in inbox_users {
+        let ap_user = ObjectId::<user::Model>::from(user).dereference(data)
+        .await.unwrap();
+        inbox.push(Url::parse(&ap_user.inbox).unwrap());
+    }
+
+    inbox.dedup();
 
     inbox
 }
