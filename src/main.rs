@@ -132,6 +132,11 @@ async fn post_manually(
     Ok(HttpResponse::Ok().json(Response { health: true }))
 }
 
+#[get("/favicon")]
+async fn favicon() -> actix_web::Result<actix_files::NamedFile> {
+    Ok(actix_files::NamedFile::open("static/favicon.ico")?)
+}
+
 #[get("/test/follow/{user}")]
 async fn follow_manually(
     path: web::Path<String>,
