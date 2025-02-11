@@ -1,8 +1,18 @@
 use crate::{
-    database::StateHandle, entities::{self, post, prelude, user}, error::Error, objects::{
+    database::StateHandle,
+    entities::{self, post, prelude, user},
+    error::Error,
+    objects::{
         person::DbUser,
         post::{DbPost, Note},
-    }, utils::{base_url_encode, generate_create_id, generate_random_object_id}, versia::{conversion::{versia_post_from_db, versia_user_from_db}, objects::SortAlphabetically, superx::request_client}, API_DOMAIN, AUTH, DB
+    },
+    utils::{base_url_encode, generate_create_id, generate_random_object_id},
+    versia::{
+        conversion::{versia_post_from_db, versia_user_from_db},
+        objects::SortAlphabetically,
+        superx::request_client,
+    },
+    API_DOMAIN, AUTH, DB,
 };
 use activitypub_federation::{
     activity_sending::SendActivityTask,
@@ -75,13 +85,9 @@ impl CreatePost {
             id: generate_create_id(data.domain(), &db_entry.id, &encoded_url)?,
         };
         let create_with_context = WithContext::new_default(create);
-        let sends = SendActivityTask::prepare(
-            &create_with_context,
-            &data.local_user().await?,
-            inbox,
-            data,
-        )
-        .await?;
+        let sends =
+            SendActivityTask::prepare(&create_with_context, &data.local_user().await?, inbox, data)
+                .await?;
         for send in sends {
             send.sign_and_send(data).await?;
         }
@@ -130,9 +136,9 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
     let db = DB.get().unwrap();
 
     let list_model = entities::prelude::FollowRelation::find()
-            .filter(entities::follow_relation::Column::FolloweeId.eq(note.creator.to_string()))
-            .all(db)
-            .await?;
+        .filter(entities::follow_relation::Column::FolloweeId.eq(note.creator.to_string()))
+        .all(db)
+        .await?;
 
     let mut list_url = Vec::new();
 
@@ -150,9 +156,11 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
     let model = prelude::User::find()
         .filter(user::Column::Id.eq(note.creator.as_str()))
         .one(db)
-        .await?.unwrap();
+        .await?
+        .unwrap();
     for inbox in array {
-        let push = req_client.post(inbox.clone())
+        let push = req_client
+            .post(inbox.clone())
             .bearer_auth(AUTH.to_string())
             .json(&SortAlphabetically(&versia_post));
         warn!("{}", inbox.to_string());
@@ -162,7 +170,7 @@ async fn federate_inbox(note: crate::entities::post::Model) -> anyhow::Result<()
     Ok(())
 }
 
-async fn push_to_inbox(req: RequestBuilder) -> anyhow::Result<()>{
+async fn push_to_inbox(req: RequestBuilder) -> anyhow::Result<()> {
     let req_client = request_client();
     let response = req_client.execute(req.build()?).await?;
 

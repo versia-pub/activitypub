@@ -16,12 +16,12 @@ use crate::{
         prelude, user,
     },
     error,
+    objects::{self, person::Person},
+    utils::{base_url_decode, generate_create_id, generate_user_id},
     versia::{
         conversion::{versia_post_from_db, versia_user_from_db},
         inbox::inbox_entry,
     },
-    objects::{self, person::Person},
-    utils::{base_url_decode, generate_create_id, generate_user_id},
     Response, API_DOMAIN, DB, FEDERATION_CONFIG,
 };
 

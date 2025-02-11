@@ -17,8 +17,8 @@ use crate::{
         post, prelude, user,
     },
     error,
-    versia::funcs::send_follow_accept_to_versia,
     utils::{generate_follow_accept_id, generate_random_object_id},
+    versia::funcs::send_follow_accept_to_versia,
     DB,
 };
 

@@ -1,5 +1,11 @@
 use crate::{
-    activities::create_post::CreatePost, database::StateHandle, entities::{prelude::Post, user, post}, error::Error, objects::person::DbUser, utils::generate_object_id, versia::conversion::db_user_from_url
+    activities::create_post::CreatePost,
+    database::StateHandle,
+    entities::{post, prelude::Post, user},
+    error::Error,
+    objects::person::DbUser,
+    utils::generate_object_id,
+    versia::conversion::db_user_from_url,
 };
 use activitypub_federation::{
     config::Data,

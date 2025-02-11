@@ -266,12 +266,12 @@ pub struct UserCollections {
     pub following: Url,
     #[serde(
         skip_serializing_if = "Option::is_none",
-        rename="pub.versia:likes/Likes"
+        rename = "pub.versia:likes/Likes"
     )]
     pub likes: Option<Url>,
     #[serde(
         skip_serializing_if = "Option::is_none",
-        rename="pub.versia:likes/Dislikes"
+        rename = "pub.versia:likes/Dislikes"
     )]
     pub dislikes: Option<Url>,
 }

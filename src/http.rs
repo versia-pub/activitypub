@@ -2,12 +2,12 @@ use crate::{
     database::StateHandle,
     entities::user,
     error::Error,
+    objects::person::{DbUser, PersonAcceptedActivities},
+    utils::generate_user_id,
     versia::{
         self,
         conversion::{db_user_from_url, local_db_user_from_name, receive_versia_note},
     },
-    objects::person::{DbUser, PersonAcceptedActivities},
-    utils::generate_user_id,
     API_DOMAIN, LYSAND_DOMAIN,
 };
 use activitypub_federation::{

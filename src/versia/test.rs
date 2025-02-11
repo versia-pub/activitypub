@@ -13,7 +13,11 @@ async fn test_user_serial() {
     let user = super::superx::deserialize_user(response.text().await.unwrap())
         .await
         .unwrap();
-    let response_outbox = client.get(user.collections.outbox.as_str()).send().await.unwrap();
+    let response_outbox = client
+        .get(user.collections.outbox.as_str())
+        .send()
+        .await
+        .unwrap();
     let outbox = super::superx::deserialize_outbox(response_outbox.text().await.unwrap())
         .await
         .unwrap();

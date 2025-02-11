@@ -146,10 +146,12 @@ pub async fn versia_user_from_db(
     } else {
         inbox_url = Url::parse(&("https://".to_string() + &API_DOMAIN + "/apbridge/versia/inbox"))?;
         followers_url = Url::parse(
-            ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/followers/" + &user.id).as_str(),
+            ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/followers/" + &user.id)
+                .as_str(),
         )?;
         following_url = Url::parse(
-            ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/following/" + &user.id).as_str(),
+            ("https://".to_string() + &API_DOMAIN + "/apbridge/versia/following/" + &user.id)
+                .as_str(),
         )?;
     }
 
@@ -489,9 +491,9 @@ pub async fn receive_versia_note(
     db_id: String,
 ) -> anyhow::Result<entities::post::Model> {
     let post_res: Option<post::Model> = prelude::Post::find()
-    .filter(entities::post::Column::Id.eq(note.id.to_string()))
-    .one(DB.get().unwrap())
-    .await?;
+        .filter(entities::post::Column::Id.eq(note.id.to_string()))
+        .one(DB.get().unwrap())
+        .await?;
 
     if let Some(post) = post_res {
         return Ok(post);
@@ -522,10 +524,18 @@ pub async fn receive_versia_note(
                     kind: Default::default(),
                 });
                 continue;
-            } else if !(l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) || l_tag.clone().to_string().contains(domain)) {
-                println!("{}", l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str()) );
+            } else if !(l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str())
+                || l_tag.clone().to_string().contains(domain))
+            {
+                println!(
+                    "{}",
+                    l_tag.clone().to_string().contains(LYSAND_DOMAIN.as_str())
+                );
                 println!("{}", l_tag.clone().to_string().contains(domain));
-                println!("-------------- {} -----------------a", l_tag.clone().to_string());
+                println!(
+                    "-------------- {} -----------------a",
+                    l_tag.clone().to_string()
+                );
                 tag.push(Mention {
                     href: l_tag,
                     kind: Default::default(),
@@ -534,10 +544,8 @@ pub async fn receive_versia_note(
             }
             println!("+++++++ --------- ++++++++++");
             let user = db_user_from_url(l_tag).await?;
-            let ap_url = Url::parse(&format!(
-                "https://{}/apbridge/user/{}",
-                domain, user.id
-            ).to_string())?;
+            let ap_url =
+                Url::parse(&format!("https://{}/apbridge/user/{}", domain, user.id).to_string())?;
             tag.push(Mention {
                 href: ap_url,
                 kind: Default::default(),
@@ -618,12 +626,11 @@ pub async fn receive_versia_note(
             to,
             tag,
             attributed_to: {
-            let user = db_user_from_url(Url::parse(user.uri.clone().as_str()).unwrap()).await?;
-            let ap_url = Url::parse(&format!(
-                "https://{}/apbridge/user/{}",
-                domain, user.id
-            ).to_string())?;
-            ap_url.into()
+                let user = db_user_from_url(Url::parse(user.uri.clone().as_str()).unwrap()).await?;
+                let ap_url = Url::parse(
+                    &format!("https://{}/apbridge/user/{}", domain, user.id).to_string(),
+                )?;
+                ap_url.into()
             },
             content: option_content_format_text(note.content)
                 .await

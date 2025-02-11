@@ -15,9 +15,7 @@ pub async fn deserialize_versia_type(data: String) -> anyhow::Result<String> {
     Ok(versia_type)
 }
 
-pub async fn serialize_versia_type(
-    versia_type: String,
-) -> anyhow::Result<String> {
+pub async fn serialize_versia_type(versia_type: String) -> anyhow::Result<String> {
     let data = serde_json::to_string(&versia_type)?;
     Ok(data)
 }

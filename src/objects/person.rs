@@ -188,10 +188,7 @@ impl Object for user::Model {
         Ok(())
     }
 
-    async fn from_json(
-        json: Self::Kind,
-        data: &Data<Self::DataType>,
-    ) -> Result<Self, Self::Error> {
+    async fn from_json(json: Self::Kind, data: &Data<Self::DataType>) -> Result<Self, Self::Error> {
         let query = User::find()
             .filter(user::Column::Url.eq(json.id.inner().as_str()))
             .one(data.database_connection.as_ref())

@@ -15,9 +15,6 @@ use clap::Parser;
 use database::Database;
 use entities::post;
 use http::{http_get_user, http_post_user_inbox, webfinger};
-use versia::http::{
-    create_activity, fetch_versia_post, fetch_post, fetch_user, versia_inbox, query_post,
-};
 use objects::person::{DbUser, Person};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::{Deserialize, Serialize};
@@ -32,6 +29,9 @@ use tracing::{info, instrument::WithSubscriber};
 use url::Url;
 use utils::generate_object_id;
 use uuid::Uuid;
+use versia::http::{
+    create_activity, fetch_post, fetch_user, fetch_versia_post, query_post, versia_inbox,
+};
 
 use crate::{
     activities::create_post::CreatePost,
@@ -47,9 +47,9 @@ mod database;
 mod entities;
 mod error;
 mod http;
-mod versia;
 mod objects;
 mod utils;
+mod versia;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
